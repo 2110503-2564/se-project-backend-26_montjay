@@ -8,7 +8,7 @@ const {
 } = require("../controllers/dentists");
 
 //Include other resources routers
-const appointmentRouter = require("./appointments");
+const appointmentRouter = require("./bookings");
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 const Dentist = require("../models/Dentist.js");
-const Appointment = require("../models/Appointment.js");
+const Booking = require("../models/Booking.js");
 
 //@desc     Get all dentists
 //@route    GET /api/v1/dentists
@@ -27,7 +27,7 @@ exports.getDentists = async (req, res, next) => {
   );
 
   //finding resource
-  query = Dentist.find(JSON.parse(queryStr)).populate("appointments");
+  query = Dentist.find(JSON.parse(queryStr)).populate("bookings");
 
   //Select Fields
   if (req.query.select) {
@@ -131,7 +131,7 @@ exports.deleteDentist = async (req, res, next) => {
       });
     }
 
-    await Appointment.deleteMany({ dentist: req.params.id });
+    await Booking.deleteMany({ dentist: req.params.id });
     await Dentist.deleteOne({ _id: req.params.id });
 
     res.status(200).json({ success: true, data: {} });
