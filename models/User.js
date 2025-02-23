@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const Role = {
+  USER: "user",
+  ADMIN: "admin",
+};
+
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -62,8 +67,3 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 module.exports = mongoose.model("User", UserSchema);
-
-const Role = {
-  USER: "user",
-  ADMIN: "admin",
-};
