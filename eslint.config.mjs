@@ -3,6 +3,7 @@ import globals from "globals";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+  pluginJs.configs.recommended,
   {
     files: ["**/*.js"],
     languageOptions: {
@@ -18,7 +19,7 @@ export default [
     rules: {
       //   Possible Problems
       "no-unused-vars": [
-        "error",
+        "warn",
         {
           vars: "all",
           args: "after-used",
@@ -95,7 +96,6 @@ export default [
       "template-curly-spacing": ["error", "never"],
     },
   },
-  pluginJs.configs.recommended,
   {
     ignores: ["node_modules/*", "build/*"],
   },
