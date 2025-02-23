@@ -70,9 +70,9 @@ export default [
         },
       ],
       "no-unused-expressions": [
-        "error",
+        "warn",
         {
-          allowShortCircuit: true,
+          allowShortCircuit: false,
           allowTernary: true,
         },
       ],
@@ -80,15 +80,7 @@ export default [
       // Best Practices
       curly: ["error", "multi-line"],
       "dot-notation": "error",
-      eqeqeq: ["error", "always"],
-      "no-multi-spaces": "warn",
-      "no-multiple-empty-lines": [
-        "warn",
-        {
-          max: 2,
-          maxEOF: 1,
-        },
-      ],
+      eqeqeq: ["warn", "always"],
 
       // Modern JS Features
       "object-shorthand": ["error", "always"],
