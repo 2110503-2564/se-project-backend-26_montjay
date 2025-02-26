@@ -1,3 +1,4 @@
+// Use a direct require where it's needed in the logout function
 const User = require("../models/User");
 
 //@desc     Register user
@@ -15,9 +16,6 @@ exports.register = async (req, res, _next) => {
       role,
     });
 
-    //Create token
-    //const token = user.getSignedJwtToken();
-    //res.status(200).json({success : true , token});
     sendTokenRespond(user, 200, res);
   } catch (err) {
     res.status(400).json({ success: false });
@@ -35,7 +33,7 @@ exports.login = async (req, res, _next) => {
   if (!email || !password) {
     return res
       .status(400)
-      .json({ succes: false, msg: "Please provide an email and password" });
+      .json({ success: false, msg: "Please provide an email and password" });
   }
 
   //Check for user
@@ -52,9 +50,6 @@ exports.login = async (req, res, _next) => {
     return res.status(401).json({ success: false, msg: "Invalid credentials" });
   }
 
-  //Create token
-  //const token = user.getSignedJwtToken();
-  //res.status(200).json({succes : true , token});
   sendTokenRespond(user, 200, res);
 };
 
@@ -90,11 +85,73 @@ exports.getMe = async (req, res, _next) => {
 //@desc     Log user out 
 //@route   GET /api/v1/auth/logout
 //@access  Private
-exports.logout = async (req, res, _next) => {
-  res.cookie("token", "none", {
-    expires: new Date(Date.now() + 10 * 1000),
-    httpOnly: true,
-  });
+exports.logout = async (req, res) => {
+  try {
+    // Get token from cookie parser
+    const token = req.cookies.token;
+    
+    if (!token) {
+      return res.status(400).json({ success: false, msg: "No active session found" });
+    }
 
-  res.status(200).json({ success: true, data: {} });
-}
+    // Get BlackList model - make sure capitalization matches your file
+    const BlackList = require("../models/BlackList");
+    
+    // Check if already blacklisted
+    const checkIfBlacklisted = await BlackList.findOne({ token });
+    if (checkIfBlacklisted) {
+      // Already logged out, but we'll still clear the cookie
+      res.cookie("token", "none", {
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+      });
+      return res.status(200).json({ success: true, msg: "Already logged out" });
+    }
+
+    // Add token to blacklist
+    await BlackList.create({ token });
+
+    // Clear the cookie
+    res.cookie("token", "none", {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true
+    });
+
+    console.log("Logout successful - token blacklisted and cookie cleared");
+    res.status(200).json({ success: true, msg: "Logged out successfully" });
+  } catch (err) {
+    console.error("Logout error:", err);
+    res.status(500).json({ success: false, msg: "Server error during logout" });
+  }
+};
+
+exports.verify = async (req, res, _next) => {
+  try {
+    const jwt = require("jsonwebtoken");
+    const BlackList = require("../models/BlackList");
+    
+    const authHeader = req.headers['cookie'];
+    if(!authHeader){
+      return res.status(401).json({success : false, msg : "Not authorize to access this route"});
+    }
+    const cookie = authHeader.split('=')[1];
+    const accessToken = cookie.split(';')[0];
+    const checkIfBlacklisted = await BlackList.findOne({token : accessToken});
+    if(checkIfBlacklisted) return res.status(401).json({success : false, msg : "Token blacklisted"});
+    
+    jwt.verify(accessToken, process.env.JWT_SECRET, async(err, decoded) => {
+      if(err) {
+        return res.status(401).json({success : false, msg : "Token expired"});
+      }
+
+      const { id } = decoded;
+      const user = await User.findById(id);
+      const { password, ...data} = user._doc;
+      req.user = data;
+      _next();
+    });
+  } catch (err) {
+    console.error("Verification error:", err);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
