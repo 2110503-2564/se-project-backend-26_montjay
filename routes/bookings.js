@@ -8,7 +8,7 @@ const {
   deleteBooking,
 } = require("../controllers/bookings");
 
-const router = express.Router({ mergeParams: true });
+const router = express.Router();
 
 const { protect, authorize } = require("../middleware/auth");
 

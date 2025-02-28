@@ -67,43 +67,78 @@ exports.getBooking = async (req, res, _next) => {
 };
 
 //@desc     Add appointment
-//@route    POST /api/v1/dentists/:dentistId/bookings
+//@route    POST /api/v1/bookings
 //@access   Private
 exports.addBooking = async (req, res, _next) => {
   try {
-    req.body.dentist = req.params.dentistId;
-    const dentist = await Dentist.findById(req.params.dentistId);
+    // Get dentist ID from request body
+    const dentistId = req.body.dentist;
 
+    // Validate dentist ID
+    if (!dentistId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a dentist ID in the request body",
+      });
+    }
+
+    // Check if dentist exists
+    const dentist = await Dentist.findById(dentistId);
     if (!dentist) {
       return res.status(404).json({
         success: false,
-        message: `No dentist with the id of ${req.params.dentistId}`,
+        message: `No dentist found with the ID ${dentistId}`,
       });
     }
-    console.log(req.body);
 
-    //add user Id to req.body
+    // Add user ID to request body
     req.body.user = req.user.id;
 
-    //Check for existed booking
+    // Check for existing bookings by the user
     const existedBookings = await Booking.find({ user: req.user.id });
 
-    //If the user is not an admin, they can only create 1 booking.
+    // Restrict non-admin users to one booking
     if (existedBookings.length >= 1 && req.user.role !== "admin") {
       return res.status(400).json({
         success: false,
-        message: `The user with ID ${req.user.id} has already made 1 appointments`,
+        message: `The user with ID ${req.user.id} is limited to one booking.`,
       });
     }
 
+    // Normalize apptDate to start of day (if time component is not relevant)
+    const apptDate = new Date(req.body.apptDate);
+
+    console.log("Normalized apptDate:", apptDate);
+
+    // Check bookings 
+    const existingBooking = await Booking.findOne({
+      dentist: dentistId,
+      apptDate: apptDate, // Use the normalized date
+      appointmentTime: req.body.appointmentTime
+    });
+
+    // Debugging: Log the query parameters
+    console.log("Query Parameters:", {
+      dentist: dentistId,
+      apptDate: apptDate,
+      appointmentTime: req.body.appointmentTime
+    });
+
+    if (existingBooking) {
+      return res.status(400).json({
+        success: false,
+        message: "A booking already exists for this dentist at the same date and time.",
+      });
+    }
+
+    // Create the booking
     const booking = await Booking.create(req.body);
 
+    // Return success response
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Cannot create Booking" });
+    console.error("Error creating booking:", error);
+    res.status(500).json({ success: false, message: "Cannot create booking" });
   }
 };
 
