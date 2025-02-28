@@ -11,7 +11,7 @@ exports.getBookings = async (req, res, _next) => {
   if (req.user.role !== "admin") {
     query = Booking.find({ user: req.user.id }).populate({
       path: "dentist",
-      select: "name province tel",
+      select: "name yearsOfExperience areaOfExpertise validate tel",
     });
   }
   //Admin can see all appointments
@@ -20,12 +20,12 @@ exports.getBookings = async (req, res, _next) => {
       console.log(req.params.dentistId);
       query = Booking.find({ dentist: req.params.dentistId }).populate({
         path: "dentist",
-        select: "name province tel",
+        select: "name yearsOfExperience areaOfExpertise validate tel",
       });
     } else {
       query = Booking.find().populate({
         path: "dentist",
-        select: "name province tel",
+        select: "name yearsOfExperience areaOfExpertise validate tel",
       });
     }
   }
@@ -47,7 +47,7 @@ exports.getBooking = async (req, res, _next) => {
   try {
     const booking = await Booking.findById(req.params.id).populate({
       path: "dentist",
-      select: "name description tel",
+      select: "name yearsOfExperience areaOfExpertise validate tel",
     });
 
     if (!booking) {
