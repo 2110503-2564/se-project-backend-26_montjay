@@ -1,23 +1,24 @@
+const mongoose = require("mongoose");
 const Booking = require("../models/Booking");
 const Dentist = require("../models/Dentist");
 
-//@desc     Get all appointments
-//@route    GET /api/v1/appointments
+//@desc     Get all bookings
+//@route    GET /api/v1/bookings
 //@access   Public
-exports.getBookings = async (req, res, _next) => {
+exports.getBookings = async (req, res, next) => {
   let query;
 
-  //General users can see only their appointments
+  // General users can only see their own bookings
   if (req.user.role !== "admin") {
     query = Booking.find({ user: req.user.id }).populate({
       path: "dentist",
       select: "name yearsOfExperience areaOfExpertise validate tel",
     });
   }
-  //Admin can see all appointments
+  // Admin can see all bookings or filter by dentist if dentistId exists
   else {
     if (req.params.dentistId) {
-      console.log(req.params.dentistId);
+      console.log("Fetching bookings for Dentist ID:", req.params.dentistId);
       query = Booking.find({ dentist: req.params.dentistId }).populate({
         path: "dentist",
         select: "name yearsOfExperience areaOfExpertise validate tel",
@@ -32,41 +33,50 @@ exports.getBookings = async (req, res, _next) => {
 
   try {
     const bookings = await query;
-    res
-      .status(200)
-      .json({ success: true, count: bookings.length, data: bookings });
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Cannot find Booking" });
+    res.status(200).json({ success: true, count: bookings.length, data: bookings });
+  } 
+  catch (error) {
+    console.error("Error fetching bookings:", error);
+    return res.status(500).json({ success: false, message: "Cannot find Booking" });
   }
 };
 
+
+//@desc     Get one booking
+//@route    GET /api/v1/bookings/:id
+//@access   Private
 exports.getBooking = async (req, res, _next) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate({
+    console.log("Request Params ID:", req.params.id);
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid booking ID format" });
+    }
+
+    // Convert string ID to ObjectId
+    const objectId = new mongoose.Types.ObjectId(req.params.id);
+
+    // Query database
+    const booking = await Booking.findOne({ _id: objectId }).populate({
       path: "dentist",
       select: "name yearsOfExperience areaOfExpertise validate tel",
     });
 
+    console.log("Fetched Booking:", booking);
+
     if (!booking) {
-      return res.status(404).json({
-        success: false,
-        message: `No appointment with the id of ${req.params.id}`,
-      });
+      return res.status(404).json({ success: false, message: `No booking found with ID ${req.params.id}` });
     }
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Cannot find Appointment" });
+    console.error("Error fetching booking:", error);
+    return res.status(500).json({ success: false, message: "Cannot find Booking" });
   }
 };
 
-//@desc     Add appointment
+//@desc     Add booking
 //@route    POST /api/v1/bookings
 //@access   Private
 exports.addBooking = async (req, res, _next) => {

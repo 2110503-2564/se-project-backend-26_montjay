@@ -7,15 +7,13 @@ const {
   deleteDentist,
 } = require("../controllers/dentists");
 
-//Include other resources routers
-const appointmentRouter = require("./bookings");
-
 const router = express.Router();
+
+const bookingRouter = require('./bookings');
 
 const { protect, authorize } = require("../middleware/auth");
 
-//Re-route into other resource routers
-router.use("/:dentistId/appointments/", appointmentRouter);
+router.use('/:dentistId/bookings/', bookingRouter);
 
 router
   .route("/")
