@@ -1,4 +1,5 @@
 // Use a direct require where it's needed in the logout function
+const Role = require("../models/User");
 const User = require("../models/User");
 
 //@desc     Register user
@@ -158,5 +159,41 @@ exports.verify = async (req, res, _next) => {
   } catch (err) {
     console.error("Verification error:", err);
     res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
+
+
+
+exports.updateUser = async (req, res) => {
+  try {
+    // Check if the user is authorized to update their information
+    if (req.user.role !== "admin") {
+      return res.status(401).json({
+        success: false,
+        message: "User is not authorized to update this user.",
+      });
+    }
+    
+    // Get user data from the request
+    const { name, tel } = req.body;
+    
+    // Find the user by their ID and update it
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+          new: true,
+          runValidators: true,
+        });
+        if (!user) {
+          return res.status(400).json({ success: false });
+        }
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error, couldn't update user.",
+    });
   }
 };
