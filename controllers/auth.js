@@ -28,30 +28,41 @@ exports.register = async (req, res, _next) => {
 //@route    POST /api/v1/auth/login
 //@access   Public
 exports.login = async (req, res, _next) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  //Validate email & password
-  if (!email || !password) {
-    return res
-      .status(400)
-      .json({ success: false, msg: "Please provide an email and password" });
+    //Validate email & password
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "Please provide an email and password" });
+    }
+
+    //Check for user
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, msg: "Invalid credentials" });
+    }
+
+    //Check if password matches
+    const isMatch = await user.matchPassword(password);
+
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, msg: "Invalid credentials" });
+    }
+
+    sendTokenRespond(user, 200, res);
+  } catch (_error) {
+    res.status(401).json({
+      success: false,
+      msg: "Cannot convert email or password to string",
+    });
   }
-
-  //Check for user
-  const user = await User.findOne({ email }).select("+password");
-
-  if (!user) {
-    return res.status(400).json({ success: false, msg: "Invalid credentials" });
-  }
-
-  //Check if password matches
-  const isMatch = await user.matchPassword(password);
-
-  if (!isMatch) {
-    return res.status(401).json({ success: false, msg: "Invalid credentials" });
-  }
-
-  sendTokenRespond(user, 200, res);
 };
 
 //Get token from model, create cookie and send response
@@ -142,8 +153,9 @@ exports.verify = async (req, res, _next) => {
     const cookie = authHeader.split("=")[1];
     const accessToken = cookie.split(";")[0];
     const checkIfBlacklisted = await BlackList.findOne({ token: accessToken });
-    if (checkIfBlacklisted)
-      {return res.status(401).json({ success: false, msg: "Token blacklisted" });}
+    if (checkIfBlacklisted) {
+      return res.status(401).json({ success: false, msg: "Token blacklisted" });
+    }
 
     jwt.verify(accessToken, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
@@ -162,8 +174,6 @@ exports.verify = async (req, res, _next) => {
   }
 };
 
-
-
 exports.updateUser = async (req, res) => {
   try {
     // Check if the user is authorized to update their information
@@ -173,18 +183,18 @@ exports.updateUser = async (req, res) => {
         message: "User is not authorized to update this user.",
       });
     }
-    
+
     // Get user data from the request
     const { name, tel } = req.body;
-    
+
     // Find the user by their ID and update it
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-          new: true,
-          runValidators: true,
-        });
-        if (!user) {
-          return res.status(400).json({ success: false });
-        }
+      new: true,
+      runValidators: true,
+    });
+    if (!user) {
+      return res.status(400).json({ success: false });
+    }
     res.status(200).json({
       success: true,
       data: user,
