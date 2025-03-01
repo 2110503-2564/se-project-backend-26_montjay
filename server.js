@@ -3,6 +3,10 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 
+const helmet = require("helmet");
+const { xss } = require("express-xss-sanitizer");
+const rateLimit = require("express-rate-limit");
+
 // Route files
 const auth = require("./routes/auth");
 const dentists = require("./routes/dentists");
@@ -21,6 +25,15 @@ app.use(express.json());
 
 // Cookie parser
 app.use(cookieParser());
+
+app.use(helmet());
+app.use(xss());
+//Rate Limiting
+const limiter = rateLimit({
+  windowsMs: 10 * 60 * 1000, //10 mins
+  max: 100,
+});
+app.use(limiter);
 
 // Mount routers
 app.use("/api/v1/auth", auth);
