@@ -110,24 +110,25 @@ exports.addBooking = async (req, res, _next) => {
 
     console.log("Normalized apptDate:", apptDate);
 
-    // Check bookings 
+    // Check bookings
     const existingBooking = await Booking.findOne({
       dentist: dentistId,
-      apptDate: apptDate, // Use the normalized date
-      appointmentTime: req.body.appointmentTime
+      apptDate,
+      appointmentTime: req.body.appointmentTime,
     });
 
     // Debugging: Log the query parameters
     console.log("Query Parameters:", {
       dentist: dentistId,
-      apptDate: apptDate,
-      appointmentTime: req.body.appointmentTime
+      apptDate,
+      appointmentTime: req.body.appointmentTime,
     });
 
     if (existingBooking) {
       return res.status(400).json({
         success: false,
-        message: "A booking already exists for this dentist at the same date and time.",
+        message:
+          "A booking already exists for this dentist at the same date and time.",
       });
     }
 
