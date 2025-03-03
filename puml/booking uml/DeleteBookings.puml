@@ -3,15 +3,15 @@
 footer Page %page% of %lastpage%
 title "Delete Booking"
 
-participant "Client" as client
+participant "user/admin" as user
 participant "<<javaScript>>\n:server" as server
 participant "<<router>>\n:bookings" as routerbooking
 participant "<<controllers>>\n:bookings" as controllersbookings
 participant "<<model>>\n:Booking" as modelBooking
 database "<<MongoDB>>\n:DentistBooking" as DentistBookingDatabase
 
-' Client sends a DELETE request to remove a booking by ID
-client->server ++: req.delete('/api/v1/bookings/:id')
+' user sends a DELETE request to remove a booking by ID
+user->server ++: req.delete('/api/v1/bookings/:id')
 server->routerbooking ++: app.use('/api/v1/bookings', bookings)
 routerbooking -> controllersbookings ++: deleteBooking()
 ' Controller fetches the booking to be deleted
@@ -25,8 +25,8 @@ modelBooking --> controllersbookings --: isOwnerValid
 controllersbookings -> modelBooking ++: deleteBooking()
 modelBooking -> DentistBookingDatabase ++: Booking.deleteOne()
 DentistBookingDatabase --> modelBooking --: bookingDeleted
-' Controller sends the response confirming deletion back to the client
+' Controller sends the response confirming deletion back to the user
 controllersbookings <-- modelBooking --: bookingDeleted
-controllersbookings -> client --: response
+controllersbookings -> user --: response
 
 @enduml
