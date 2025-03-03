@@ -1,0 +1,38 @@
+@startuml Add Booking
+
+footer Page %page% of %lastpage%
+title "Add Booking"
+
+participant "user/admin" as user
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:bookings" as routerbooking
+participant "<<controllers>>\n:bookings" as controllersbookings
+participant "<<model>>\n:Booking" as modelBooking
+participant "<<model>>\n:Dentist" as modelDentist
+database "<<MongoDB>>\n:DentistBooking" as DentistBookingDatabase
+
+' user sends a POST request to add a new booking
+user->server ++: req.post('/api/v1/bookings')
+server->routerbooking ++: app.use('/api/v1/bookings', bookings)
+routerbooking -> controllersbookings ++: addBooking()
+' Controller validates and fetches the dentist information
+controllersbookings -> modelDentist ++: findDentistById()
+modelDentist -> DentistBookingDatabase ++: Dentist.findById()
+DentistBookingDatabase --> modelDentist --: dentist
+' Controller checks if the user has existing bookings (if necessary)
+controllersbookings -> modelBooking ++: checkExistingBookings()
+modelBooking -> DentistBookingDatabase ++: Booking.find()
+DentistBookingDatabase --> modelBooking --: existingBookings
+' Controller checks if a booking already exists at the same time for the same dentist
+controllersbookings -> modelBooking ++: checkForConflicts()
+modelBooking -> DentistBookingDatabase ++: Booking.findOne()
+DentistBookingDatabase --> modelBooking --: existingBooking
+' Controller creates the new booking in the database
+controllersbookings -> modelBooking ++: createBooking()
+modelBooking -> DentistBookingDatabase ++: Booking.create()
+DentistBookingDatabase --> modelBooking --: newBooking
+' Controller sends the response with the new booking data to the user
+controllersbookings <-- modelBooking --: newBooking
+controllersbookings -> user --: response
+
+@enduml
