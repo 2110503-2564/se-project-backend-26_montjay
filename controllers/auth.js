@@ -142,7 +142,7 @@ exports.logout = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     // Check if the user is authorized to update their information
-    if (req.user.role !== "admin") {
+    if (req.params.id !== req.user.id && req.user.role !== "admin") {
       return res.status(401).json({
         success: false,
         message: "User is not authorized to update this user.",
@@ -168,7 +168,8 @@ exports.updateUser = async (req, res) => {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: "Server error, couldn't update user.",
+      message: "please check your tel.",
     });
   }
 };
+
