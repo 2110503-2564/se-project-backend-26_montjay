@@ -1,0 +1,27 @@
+@startuml Get Dentist (GET)
+
+footer Page %page% of %lastpage%
+title "Get Dentist by ID"
+
+participant "User" as user
+participant "<<JavaScript>>\n:server" as server
+participant "<<router>>\n:dentists" as routerDentists
+participant "<<controllers>>\n:dentists" as controllersDentists
+participant "<<model>>\n:Dentist" as modelDentist
+database "<<MongoDB>>\n:dentists" as DentistsDatabase
+
+user -> server ++ : req.get('/api/v1/dentists/:id')
+server -> routerDentists ++ : app.use('/api/v1/dentists', dentists)
+routerDentists -> controllersDentists ++ : getDentist()
+controllersDentists -> modelDentist ++ : findById(req.params.id)
+modelDentist -> DentistsDatabase ++ : DentistSchema
+DentistsDatabase --> modelDentist -- : dentist
+
+alt Dentist Found
+    controllersDentists <-- modelDentist -- : dentist
+    controllersDentists -> user -- : JSON response { success: true, data: dentist }
+else Dentist Not Found
+    controllersDentists -> user -- : JSON response { success: false }
+end
+
+@enduml
