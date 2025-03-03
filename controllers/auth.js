@@ -139,41 +139,6 @@ exports.logout = async (req, res) => {
   }
 };
 
-exports.verify = async (req, res, _next) => {
-  try {
-    const jwt = require("jsonwebtoken");
-    const BlackList = require("../models/BlackList");
-
-    const authHeader = req.headers.cookie;
-    if (!authHeader) {
-      return res
-        .status(401)
-        .json({ success: false, msg: "Not authorize to access this route" });
-    }
-    const cookie = authHeader.split("=")[1];
-    const accessToken = cookie.split(";")[0];
-    const checkIfBlacklisted = await BlackList.findOne({ token: accessToken });
-    if (checkIfBlacklisted) {
-      return res.status(401).json({ success: false, msg: "Token blacklisted" });
-    }
-
-    jwt.verify(accessToken, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ success: false, msg: "Token expired" });
-      }
-
-      const { id } = decoded;
-      const user = await User.findById(id);
-      const { password, ...data } = user._doc;
-      req.user = data;
-      _next();
-    });
-  } catch (err) {
-    console.error("Verification error:", err);
-    res.status(500).json({ success: false, msg: "Server error" });
-  }
-};
-
 exports.updateUser = async (req, res) => {
   try {
     // Check if the user is authorized to update their information
