@@ -1,5 +1,6 @@
 // Use a direct require where it's needed in the logout function
 const User = require("../models/User");
+const Blacklist = require("../models/Blacklist");
 
 //@desc     Register user
 //@route    POST /api/v1/auth/register
@@ -108,22 +109,8 @@ exports.logout = async (req, res) => {
         .json({ success: false, msg: "No active session found" });
     }
 
-    // Get BlackList model - make sure capitalization matches your file
-    const BlackList = require("../models/Blacklist");
-
-    // Check if already blacklisted
-    const checkIfBlacklisted = await BlackList.findOne({ token });
-    if (checkIfBlacklisted) {
-      // Already logged out, but we'll still clear the cookie
-      res.cookie("token", "none", {
-        expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true,
-      });
-      return res.status(200).json({ success: true, msg: "Already logged out" });
-    }
-
     // Add token to blacklist
-    await BlackList.create({ token });
+    await Blacklist.create({ token });
 
     // Clear the cookie
     res.cookie("token", "none", {
