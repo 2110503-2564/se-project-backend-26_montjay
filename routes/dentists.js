@@ -9,11 +9,11 @@ const {
 
 const router = express.Router();
 
-const bookingRouter = require('./bookings');
+const bookingRouter = require("./bookings");
 
 const { protect, authorize } = require("../middleware/auth");
 
-router.use('/:dentistId/bookings/', bookingRouter);
+router.use("/:dentistId/bookings/", bookingRouter);
 
 router
   .route("/")

@@ -1,5 +1,4 @@
 // Use a direct require where it's needed in the logout function
-const Role = require("../models/User");
 const User = require("../models/User");
 
 //@desc     Register user
@@ -143,7 +142,7 @@ exports.logout = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     // Check if the user is authorized to update their information
-    if (req.params.id !== req.user.id && req.user.role !== Role.ADMIN) {
+    if (req.params.id !== req.user.id && req.user.role !== "admin") {
       return res.status(401).json({
         success: false,
         message: "User is not authorized to update this user.",
