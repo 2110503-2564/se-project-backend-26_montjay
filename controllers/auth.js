@@ -109,7 +109,7 @@ exports.logout = async (req, res) => {
     }
 
     // Get BlackList model - make sure capitalization matches your file
-    const BlackList = require("../models/BlackList");
+    const BlackList = require("../models/Blacklist");
 
     // Check if already blacklisted
     const checkIfBlacklisted = await BlackList.findOne({ token });
