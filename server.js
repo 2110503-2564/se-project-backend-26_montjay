@@ -11,6 +11,7 @@ const rateLimit = require("express-rate-limit");
 const auth = require("./routes/auth");
 const dentists = require("./routes/dentists");
 const bookings = require("./routes/bookings");
+const { version } = require("mongoose");
 
 // Load env vars
 dotenv.config({ path: "./config/config.env" });
@@ -46,8 +47,7 @@ const server = app.listen(
   console.log(
     "Server running in ",
     process.env.NODE_ENV,
-    " mode on port ",
-    PORT,
+    "on " + process.env.HOST + ":" + PORT,
   ),
 );
 
@@ -59,3 +59,19 @@ process.on("unhandledRejection", (err) => {
     throw new Error("Server closed due to unhandled promise rejection");
   });
 });
+
+// Swagger
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: '3.0.0',
+    info: {
+      title: "Dentist API",
+      version: "1.0.0",
+      description: "Dentist API Information",
+      servers: [{
+        url: process.env.HOST + ":" + PORT + '/api/v1',
+      }],
+    },
+  },
+  apis: ["./routes/*.js"],
+}

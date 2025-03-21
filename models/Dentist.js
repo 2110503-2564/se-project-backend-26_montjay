@@ -39,7 +39,7 @@ const DentistSchema = new mongoose.Schema(
 );
 DentistSchema.virtual("bookings", {
   ref: "Booking",
-  localField: "_id",
+  localField: "id",
   foreignField: "dentist",
   justOne: false,
 });

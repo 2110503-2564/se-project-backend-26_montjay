@@ -31,3 +31,9 @@ newman/
 
 # miscellaneous
 test.json
+
+#plant uml
+*.puml
+
+#folder out
+out/

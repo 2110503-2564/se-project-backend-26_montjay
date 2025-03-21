@@ -58,7 +58,7 @@ exports.getBooking = async (req, res, _next) => {
     const objectId = new mongoose.Types.ObjectId(req.params.id);
 
     // Query database
-    const booking = await Booking.findOne({ _id: objectId }).populate({
+    const booking = await Booking.findOne({ id: objectId }).populate({
       path: "dentist",
       select: "name yearsOfExperience areaOfExpertise validate tel",
     });
@@ -146,7 +146,7 @@ exports.addBooking = async (req, res, _next) => {
     const booking = await Booking.create(req.body);
 
     // Return success response
-    res.status(200).json({ success: true, data: booking });
+    res.status(201).json({ success: true, data: booking });
   } catch (error) {
     console.error("Error creating booking:", error);
     res.status(500).json({ success: false, message: "Cannot create booking" });
