@@ -34,6 +34,7 @@ test.json
 
 #plant uml
 *.puml
+puml/
 
 #folder out
 out/
