@@ -43,6 +43,10 @@ app.use("/api/v1/auth", auth);
 app.use("/api/v1/dentists", dentists);
 app.use("/api/v1/bookings", bookings);
 
+const cors = require("cors");
+
+app.use(cors());
+
 const PORT = process.env.PORT || 5003;
 const server = app.listen(
   PORT,
