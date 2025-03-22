@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
+const cors = require("cors");
 
 const helmet = require("helmet");
 const { xss } = require("express-xss-sanitizer");
@@ -29,6 +30,7 @@ app.use(cookieParser());
 
 app.use(helmet());
 app.use(xss());
+app.use(cors());
 //Rate Limiting
 const limiter = rateLimit({
   windowsMs: 10 * 60 * 1000, //10 mins
@@ -47,7 +49,7 @@ const server = app.listen(
   console.log(
     "Server running in ",
     process.env.NODE_ENV,
-    "on " + process.env.HOST + ":" + PORT,
+    `on ${process.env.HOST}:${PORT}`,
   ),
 );
 
@@ -63,15 +65,17 @@ process.on("unhandledRejection", (err) => {
 // Swagger
 const swaggerOptions = {
   swaggerDefinition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
       title: "Dentist API",
       version: "1.0.0",
       description: "Dentist API Information",
-      servers: [{
-        url: process.env.HOST + ":" + PORT + '/api/v1',
-      }],
+      servers: [
+        {
+          url: `${process.env.HOST}:${PORT}/api/v1`,
+        },
+      ],
     },
   },
   apis: ["./routes/*.js"],
-}
+};
