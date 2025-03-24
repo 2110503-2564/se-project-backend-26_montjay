@@ -132,7 +132,7 @@ exports.deleteDentist = async (req, res, next) => {
     }
 
     await Booking.deleteMany({ dentist: req.params.id });
-    await Dentist.deleteOne({ id: req.params.id });
+    await Dentist.deleteOne({ _id: req.params.id });
 
     res.status(200).json({ success: true, data: {} });
   } catch (err) {
