@@ -10,24 +10,39 @@ exports.getBookings = async (req, res, next) => {
 
   // General users can only see their own bookings
   if (req.user.role !== "admin") {
-    query = Booking.find({ user: req.user.id }).populate({
-      path: "dentist",
-      select: "name yearsOfExperience areaOfExpertise validate tel",
-    });
+    query = Booking.find({ user: req.user.id })
+      .populate({
+        path: "dentist",
+        select: "name yearsOfExperience areaOfExpertise validate tel",
+      })
+      .populate({
+        path: "user",
+        select: "name", // Select only the 'name' field from the User model
+      });
   }
   // Admin can see all bookings or filter by dentist if dentistId exists
   else {
     if (req.params.dentistId) {
       console.log("Fetching bookings for Dentist ID:", req.params.dentistId);
-      query = Booking.find({ dentist: req.params.dentistId }).populate({
-        path: "dentist",
-        select: "name yearsOfExperience areaOfExpertise validate tel",
-      });
+      query = Booking.find({ dentist: req.params.dentistId })
+        .populate({
+          path: "dentist",
+          select: "name yearsOfExperience areaOfExpertise validate tel",
+        })
+        .populate({
+          path: "user",
+          select: "name", // Select only the 'name' field from the User model
+        });
     } else {
-      query = Booking.find().populate({
-        path: "dentist",
-        select: "name yearsOfExperience areaOfExpertise validate tel",
-      });
+      query = Booking.find()
+        .populate({
+          path: "dentist",
+          select: "name yearsOfExperience areaOfExpertise validate tel",
+        })
+        .populate({
+          path: "user",
+          select: "name", // Select only the 'name' field from the User model
+        });
     }
   }
 
