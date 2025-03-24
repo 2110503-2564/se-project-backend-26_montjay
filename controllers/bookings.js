@@ -96,7 +96,8 @@ exports.getBooking = async (req, res, _next) => {
 //@access   Private
 exports.addBooking = async (req, res, _next) => {
   try {
-    // Get dentist ID from request body
+    // Get user ID from request body (not from req.user)
+    const userId = req.body.user || req.user.id;
     const dentistId = req.body.dentist;
 
     // Validate dentist ID
@@ -116,33 +117,31 @@ exports.addBooking = async (req, res, _next) => {
       });
     }
 
-    // Add user ID to request body
-    req.body.user = req.user.id;
+    // Ensure user ID is correctly assigned
+    req.body.user = userId;
 
     // Check for existing bookings by the user
-    const existedBookings = await Booking.find({ user: req.user.id });
+    const existedBookings = await Booking.find({ user: userId });
 
     // Restrict non-admin users to one booking
     if (existedBookings.length >= 1 && req.user.role !== "admin") {
       return res.status(400).json({
         success: false,
-        message: `The user with ID ${req.user.id} is limited to one booking.`,
+        message: `The user with ID ${userId} is limited to one booking.`,
       });
     }
 
     // Normalize apptDate to start of day (if time component is not relevant)
     const apptDate = new Date(req.body.apptDate);
-
     console.log("Normalized apptDate:", apptDate);
 
-    // Check bookings
+    // Check for existing bookings at the same time
     const existingBooking = await Booking.findOne({
       dentist: dentistId,
       apptDate,
       appointmentTime: req.body.appointmentTime,
     });
 
-    // Debugging: Log the query parameters
     console.log("Query Parameters:", {
       dentist: dentistId,
       apptDate,
@@ -157,7 +156,7 @@ exports.addBooking = async (req, res, _next) => {
       });
     }
 
-    // Create the booking
+    // Create the booking with the correct owner
     const booking = await Booking.create(req.body);
 
     // Return success response
