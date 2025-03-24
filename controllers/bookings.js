@@ -96,7 +96,7 @@ exports.getBooking = async (req, res, _next) => {
 //@access   Private
 exports.addBooking = async (req, res, _next) => {
   try {
-    // Get user ID from request body (not from req.user)
+    // Get user ID from request body 
     const userId = req.body.user || req.user.id;
     const dentistId = req.body.dentist;
 
@@ -131,7 +131,6 @@ exports.addBooking = async (req, res, _next) => {
       });
     }
 
-    // Normalize apptDate to start of day (if time component is not relevant)
     const apptDate = new Date(req.body.apptDate);
     console.log("Normalized apptDate:", apptDate);
 
