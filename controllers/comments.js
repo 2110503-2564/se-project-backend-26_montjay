@@ -58,36 +58,60 @@ exports.getComment = async (req, res, _next) => {
 };
 
 //@desc     Add Comment
-//@route    POST /api/v1/comment/dentID
+//@route    POST /api/v1/dentID/comment
 //@access   Private
 exports.addComment = async (req, res, next) => {
-    try {
-        req.body.Dentist = req.params.dentistId;
+  try {
+    // Get user ID from request body 
+    const userId = req.body.user || req.user.id;
+    const dentistId = req.body.dentist;
 
-        const dentID = await Dentist.findById(req.params.dentistId);
-
-        if (!dentID) {
-            return res.status(404).json({ success: false, message: `No Dentist with the id of ${req.params.dentistId}` });
-        }
-
-        req.body.user = req.user.id;
-        
-        const existComment = await Comment.findOne({ 
-          user: req.user.id, 
-          dentist: req.params.dentistId
-        });
-
-        if (existComment) {
-            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already comment this dentist` });
-        }
-        
-        const comment = await Comment.create(req.body);
-        res.status(200).json({ success: true, data: comment });
+    // Validate dentist ID
+    if (!dentistId) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a dentist ID in the request body",
+      });
     }
-    catch (err) {
-        console.log(err.stack);
-        res.status(500).json({ success: false, message: 'Cannot create Comment' });
+
+    // Check if dentist exists
+    const dentist = await Dentist.findById(dentistId);
+    if (!dentist) {
+      return res.status(404).json({
+        success: false,
+        message: `No dentist found with the ID ${dentistId}`,
+      });
     }
+
+    // Ensure user ID is correctly assigned
+    req.body.user = userId;
+
+    // Check for existing bookings by the user
+    const existComment = await Comment.findOne({ 
+      user: req.user.id, 
+      dentist: req.body.dentistId  
+    });
+
+    // Restrict non-admin users to one booking
+    if (existComment && req.user.role !== "admin") {
+      return res.status(400).json({
+        success: false,
+        message: `The user with ID ${userId} is limited to one comment in this dentist.`,
+      });
+    }
+
+    const apptDate = new Date(req.body.apptDate);
+    console.log("Normalized apptDate:", apptDate);
+
+    // Create the booking with the correct owner
+    const comment = await Comment.create(req.body);
+
+    // Return success response
+    res.status(201).json({ success: true, data: comment });
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    res.status(500).json({ success: false, message: "Cannot create comment" });
+  }
 };
 
 //@desc     Update commend
