@@ -12,6 +12,7 @@ const rateLimit = require("express-rate-limit");
 const auth = require("./routes/auth");
 const dentists = require("./routes/dentists");
 const bookings = require("./routes/bookings");
+const comments = require('./routes/comments')
 const { version } = require("mongoose");
 
 // Load env vars
@@ -49,6 +50,7 @@ app.use(limiter);
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/dentists", dentists);
 app.use("/api/v1/bookings", bookings);
+app.use("/api/v1/comments", comments)
 
 const PORT = process.env.PORT || 5003;
 const server = app.listen(
