@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Role = {
   USER: "user",
   ADMIN: "admin",
+  DENTIST: "dentist"
 };
 module.exports = Role;
 

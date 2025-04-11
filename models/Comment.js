@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 
-const BookingSchema = new mongoose.Schema({
-    apptDate: {
-        type: Date,
-        required: true
-    },
+const CommentSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.ObjectId,
         ref: "User",
@@ -15,9 +11,9 @@ const BookingSchema = new mongoose.Schema({
         ref: "Dentist",
         required: true
     },
-    isUnavaliable: {
-        type: Boolean,
-        default: false 
+    comment: {
+        type: String,
+        required: true
     },
     createdAt: {
         type: Date,
@@ -25,4 +21,4 @@ const BookingSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("Booking",BookingSchema);
+module.exports = mongoose.model("Comment",CommentSchema);
