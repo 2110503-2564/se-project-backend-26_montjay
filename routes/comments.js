@@ -4,7 +4,8 @@ const {
   getComment,
   updateComment,
   deleteComment,
-  addComment
+  addComment,
+  getCommentsByDentId
 } = require("../controllers/comments");
 
 const router = express.Router({ mergeParams: true }); 
@@ -16,5 +17,7 @@ router.route("/").get(protect, getComments).post(protect, authorize("admin", "us
 
 // Route for getting, updating, and deleting a specific comment by its ID
 router.route("/:id").get(protect, getComment).put(protect, authorize("admin", "user"), updateComment).delete(protect, authorize("admin", "user"), deleteComment); 
+
+router.route("/:dentId").get(protect, getCommentsByDentId);
 
 module.exports = router;

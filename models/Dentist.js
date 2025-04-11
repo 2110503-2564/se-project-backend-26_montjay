@@ -44,7 +44,7 @@ DentistSchema.virtual("bookings", {
   justOne: false,
 });
 
-DentistSchema,virtual("comments",{
+DentistSchema.virtual("comments",{
   ref: "Comment",
   localField: "id",
   foreignField: "dentist",
