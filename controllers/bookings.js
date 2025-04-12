@@ -56,6 +56,19 @@ exports.getBookings = async (req, res, next) => {
   }
 };
 
+//@desc     Get Unavailable Booking
+//@route    GET /api/v1/dentists/dentID/Unavilable
+//@access   Private
+exports.getUnavailableBooking = async (req,res, _next) => {
+  try {
+    const Unavailable = await Booking.find({dentist: req.params.dentistId ,isUnavailable: true});
+    res.status(200).json({ success: true, count: Unavailable.length, data: Unavailable });
+  } 
+  catch (error) {
+    console.error("Error fetching bookings:", error);
+    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+  }
+}
 
 //@desc     Get one booking
 //@route    GET /api/v1/bookings/:id
