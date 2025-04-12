@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const BookingSchema = new mongoose.Schema({
-    apptDate: {
+    apptDateAndTime: {
         type: Date,
         required: true
     },
@@ -15,7 +15,7 @@ const BookingSchema = new mongoose.Schema({
         ref: "Dentist",
         required: true
     },
-    isUnavaliable: {
+    isUnavailable: {
         type: Boolean,
         default: false 
     },

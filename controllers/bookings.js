@@ -124,37 +124,53 @@ exports.addBooking = async (req, res, _next) => {
     const existedBookings = await Booking.find({ user: userId });
 
     // Restrict non-admin users to one booking
-    if (existedBookings.length >= 1 && req.user.role !== "admin") {
+    if (existedBookings.length >= 1 && req.user.role !== "admin" && req.user.role !== "dentist") {
       return res.status(400).json({
         success: false,
         message: `The user with ID ${userId} is limited to one booking.`,
       });
     }
 
-    const apptDate = new Date(req.body.apptDate);
-    console.log("Normalized apptDate:", apptDate);
+    const apptDateAndTime = new Date(req.body.apptDateAndTime);
+    console.log("Normalized apptDate:", apptDateAndTime);
 
     // Check for existing bookings at the same time
     const existingBooking = await Booking.findOne({
       dentist: dentistId,
-      apptDate,
-      appointmentTime: req.body.appointmentTime,
+      apptDateAndTime,
     });
 
     console.log("Query Parameters:", {
       dentist: dentistId,
-      apptDate,
-      appointmentTime: req.body.appointmentTime,
+      apptDateAndTime,
     });
 
-    if (existingBooking) {
+    const checkAvailable = req.body.isUnavailable
+    if (checkAvailable) {
+
+      if (existingBooking && existingBooking.isUnavailable) {
+        return res.status(500).json({ success: false, message: "you've marked this time" });
+      }      
+      if(req.user.role == 'user') res.status(500).json({ success: false, message: "Cannot create booking" });
+
+      const apptDateAndTime = new Date(req.body.apptDateAndTime);
+
+      // Remove all bookings with same dentist in the range and not marked as unavailable
+      const result = await Booking.deleteOne({
+        dentist: dentistId,
+        apptDateAndTime,
+        isUnavailable: false
+      });
+      console.log('Delete Booking: ', result.deletedCount);
+    }
+    else if (existingBooking) {
       return res.status(400).json({
         success: false,
         message:
-          "A booking already exists for this dentist at the same date and time.",
+          "this time is not available",
       });
     }
-
+    
     // Create the booking with the correct owner
     const booking = await Booking.create(req.body);
 
