@@ -57,9 +57,23 @@ exports.getBookings = async (req, res, next) => {
 };
 
 //@desc     Get Unavailable Booking
-//@route    GET /api/v1/dentists/dentID/Unavilable
+//@route    GET /api/v1/dentists/:dentID/unavilable
 //@access   Private
 exports.getUnavailableBooking = async (req,res, _next) => {
+  try {
+    const Unavailable = await Booking.find({isUnavailable: true});
+    res.status(200).json({ success: true, count: Unavailable.length, data: Unavailable });
+  } 
+  catch (error) {
+    console.error("Error fetching bookings:", error);
+    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+  }
+}
+
+//@desc     Get Unavailable Booking
+//@route    GET /api/v1/dentists/:dentID/unavilable
+//@access   Private
+exports.getUnavailableBookingByDentID = async (req,res, _next) => {
   try {
     const Unavailable = await Booking.find({dentist: req.params.dentistId ,isUnavailable: true});
     res.status(200).json({ success: true, count: Unavailable.length, data: Unavailable });
@@ -221,6 +235,15 @@ exports.updateBooking = async (req, res, _next) => {
       new: true,
       runValidators: true,
     });
+
+    if(booking.isUnavailable){
+      const result = await Booking.deleteOne({
+        dentist: booking.dentist,
+        apptDateAndTime: booking.apptDateAndTime,
+        isUnavailable: false
+      });
+      console.log("delete booking", result.count)
+    }
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {

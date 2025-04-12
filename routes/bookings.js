@@ -5,7 +5,8 @@ const {
   addBooking,
   updateBooking,
   deleteBooking,
-  getUnavailableBooking
+  getUnavailableBooking,
+  getUnavailableBookingByDentID
 } = require("../controllers/bookings");
 
 const router = express.Router({ mergeParams: true }); 
@@ -16,11 +17,15 @@ const { protect, authorize } = require("../middleware/auth");
 router.route("/")
   .get(protect, (req, res, next) => {
     if (req.baseUrl.includes("unavailable")) {
-      return getUnavailableBooking(req, res, next);
+      return getUnavailableBookingByDentID(req, res, next);
     }
     return getBookings(req, res, next);
   })
   .post(protect, authorize("admin", "user"), addBooking);
+
+// Route for getting Unavailable booking
+router.route("/unavailable")
+  .get(protect, authorize("admin"), getUnavailableBooking)
 
 // Route for getting, updating, and deleting a specific booking by its ID
 router.route("/:id")
