@@ -183,11 +183,7 @@ exports.addBooking = async (req, res, _next) => {
       const apptDateAndTime = new Date(req.body.apptDateAndTime);
 
       // Remove all bookings with same dentist in the range and not marked as unavailable
-      const result = await Booking.deleteOne({
-        dentist: dentistId,
-        apptDateAndTime,
-        isUnavailable: false
-      });
+      const result = await Booking.findByIdAndUpdate(existedBookings.id,{ status: "Cancel" });
       console.log('Delete Booking: ', result.deletedCount);
     }
     else if (existingBooking) {
@@ -242,12 +238,15 @@ exports.updateBooking = async (req, res, _next) => {
         .status(500)
         .json({ success: false, message: "You don't have permission" });
       }
-      const result = await Booking.deleteOne({
+      const result = await Booking.findByIdAndUpdate({
         dentist: booking.dentist,
         apptDateAndTime: booking.apptDateAndTime,
         isUnavailable: false
+      },
+      {
+        status: "Cancel"
       });
-      console.log("delete booking", result.count)
+      console.log("Cancle booking", result.count)
     }
 
     res.status(200).json({ success: true, data: booking });
