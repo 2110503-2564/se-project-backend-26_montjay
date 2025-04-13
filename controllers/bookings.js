@@ -237,6 +237,11 @@ exports.updateBooking = async (req, res, _next) => {
     });
 
     if(booking.isUnavailable){
+      if(req.user.role == "user") {
+        return res
+        .status(500)
+        .json({ success: false, message: "You don't have permission" });
+      }
       const result = await Booking.deleteOne({
         dentist: booking.dentist,
         apptDateAndTime: booking.apptDateAndTime,

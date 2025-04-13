@@ -1,5 +1,6 @@
 // Use a direct require where it's needed in the logout function
 const User = require("../models/User");
+const Dentist = require("../models/Dentist")
 const Blacklist = require("../models/Blacklist");
 
 //@desc     Register user
@@ -7,7 +8,7 @@ const Blacklist = require("../models/Blacklist");
 //@access   Public
 exports.register = async (req, res, _next) => {
   try {
-    const { name, email, password, role, tel } = req.body;
+    const { name, email, password, role, tel, yearsOfExperience, areaOfExpertise } = req.body;
 
     //Create user
     const user = await User.create({
@@ -17,8 +18,31 @@ exports.register = async (req, res, _next) => {
       tel,
       role,
     });
-
     sendTokenRespond(user, 200, res);
+  } catch (err) {
+    res.status(400).json({ success: false });
+    console.log(err.stack);
+  }
+};
+
+exports.registerDentist = async (req, res, _next) => {
+  try {
+    const { name, email, password, role, tel } = req.body;
+    //Create user
+    const user = await User.create({
+      name,
+      email,
+      password,
+      tel,
+      role,
+    });
+    const dentist = await Dentist({
+      user: user._id,
+      yearsOfExperience,
+      areaOfExpertise
+    });
+    sendTokenRespond(user, dentist, 200, res);
+
   } catch (err) {
     res.status(400).json({ success: false });
     console.log(err.stack);
