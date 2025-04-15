@@ -174,17 +174,27 @@ exports.addBooking = async (req, res, _next) => {
 
     const checkAvailable = req.body.isUnavailable
     if (checkAvailable) {
+      if(req.user.role == 'user') 
+        return res.status(500).json({ success: false, message: "Cannot create booking" });
 
-      if (existingBooking && existingBooking.isUnavailable) {
-        return res.status(500).json({ success: false, message: "you've marked this time" });
-      }      
-      if(req.user.role == 'user') res.status(500).json({ success: false, message: "Cannot create booking" });
+      if (existingBooking) {
+        if(existingBooking.isUnavailable)
+          return res.status(500).json({ success: false, message: "you've marked this time" });
 
-      const apptDateAndTime = new Date(req.body.apptDateAndTime);
+        req.body.status = "Cancel";
 
-      // Remove all bookings with same dentist in the range and not marked as unavailable
-      const result = await Booking.findByIdAndUpdate(existedBookings.id,{ status: "Cancel" });
-      console.log('Delete Booking: ', result.deletedCount);
+        // Remove all bookings with same dentist in the range and not marked as unavailable
+        const result = await Booking.findByIdAndUpdate(existingBooking.id,{ status: "Cancel" });
+        if (result) {
+          console.log('Cancelled booking:', existingBooking._id);
+        } else {
+          console.log('No booking found to cancel.');
+        }
+      }
+      else {
+        console.log('No Cancel Booking');
+      }
+      
     }
     else if (existingBooking) {
       return res.status(400).json({
@@ -238,7 +248,10 @@ exports.updateBooking = async (req, res, _next) => {
         .status(500)
         .json({ success: false, message: "You don't have permission" });
       }
-      const result = await Booking.findByIdAndUpdate({
+
+      booking.status = "Cancel";
+
+      const result = await Booking.findOneAndUpdate({
         dentist: booking.dentist,
         apptDateAndTime: booking.apptDateAndTime,
         isUnavailable: false
@@ -246,7 +259,11 @@ exports.updateBooking = async (req, res, _next) => {
       {
         status: "Cancel"
       });
-      console.log("Cancle booking", result.count)
+      if (result) {
+        console.log('Cancel booking');
+      } else {
+        console.log('No booking found to cancel.');
+      }
     }
 
     res.status(200).json({ success: true, data: booking });
