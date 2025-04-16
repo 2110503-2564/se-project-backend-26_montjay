@@ -21,16 +21,16 @@ router.route("/")
     }
     return getBookings(req, res, next);
   })
-  .post(protect, authorize("admin", "user"), addBooking);
+  .post(protect, authorize("admin", "user", "dentist"), addBooking);
 
-// Route for getting Unavailable booking
+// Route for getting all unavailable bookings (admin only)
 router.route("/unavailable")
-  .get(protect, authorize("admin"), getUnavailableBooking)
+  .get(protect, authorize("admin", "dentist"), getUnavailableBooking);
 
 // Route for getting, updating, and deleting a specific booking by its ID
 router.route("/:id")
   .get(protect, getBooking)
-  .put(protect, authorize("admin", "user"), updateBooking)
-  .delete(protect, authorize("admin", "user"), deleteBooking); 
+  .put(protect, authorize("admin", "user", "dentist"), updateBooking)
+  .delete(protect, authorize("admin", "user", "dentist"), deleteBooking); 
 
 module.exports = router;
