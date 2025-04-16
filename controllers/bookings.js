@@ -56,6 +56,41 @@ exports.getBookings = async (req, res, next) => {
   }
 };
 
+//@desc     Get Unavailable Booking
+//@route    GET /api/v1/bookings/unavailable
+//@access   Private
+exports.getUnavailableBooking = async (req, res, _next) => {
+  try {
+    const unavailable = await Booking.find({ isUnavailable: true });
+    res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
+  } 
+  catch (error) {
+    console.error("Error fetching unavailable bookings:", error);
+    return res.status(500).json({ success: false, message: "Cannot find unavailable slots" });
+  }
+}
+
+//@desc     Get Unavailable Booking by Dentist ID
+//@route    GET /api/v1/dentists/:dentistId/unavailable
+//@access   Private
+exports.getUnavailableBookingByDentID = async (req, res, _next) => {
+  try {
+    if (!req.params.dentistId) {
+      return res.status(400).json({ success: false, message: "Dentist ID is required" });
+    }
+
+    const unavailable = await Booking.find({
+      dentist: req.params.dentistId,
+      isUnavailable: true
+    });
+    
+    res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
+  } 
+  catch (error) {
+    console.error("Error fetching unavailable bookings by dentist:", error);
+    return res.status(500).json({ success: false, message: "Cannot find unavailable slots" });
+  }
+}
 
 //@desc     Get one booking
 //@route    GET /api/v1/bookings/:id
@@ -69,11 +104,7 @@ exports.getBooking = async (req, res, _next) => {
       return res.status(400).json({ success: false, message: "Invalid booking ID format" });
     }
 
-    // Convert string ID to ObjectId
-    const objectId = new mongoose.Types.ObjectId(req.params.id);
-
-    // Query database
-    const booking = await Booking.findOne({ id: objectId }).populate({
+    const booking = await Booking.findById(req.params.id).populate({
       path: "dentist",
       select: "name yearsOfExperience areaOfExpertise validate tel",
     });
@@ -96,7 +127,7 @@ exports.getBooking = async (req, res, _next) => {
 //@access   Private
 exports.addBooking = async (req, res, _next) => {
   try {
-    // Get user ID from request body 
+    // Get user ID from request body or from authenticated user
     const userId = req.body.user || req.user.id;
     const dentistId = req.body.dentist;
 
@@ -119,43 +150,69 @@ exports.addBooking = async (req, res, _next) => {
 
     // Ensure user ID is correctly assigned
     req.body.user = userId;
-
-    // Check for existing bookings by the user
-    const existedBookings = await Booking.find({ user: userId });
-
-    // Restrict non-admin users to one booking
-    if (existedBookings.length >= 1 && req.user.role !== "admin") {
-      return res.status(400).json({
-        success: false,
-        message: `The user with ID ${userId} is limited to one booking.`,
-      });
-    }
-
-    const apptDate = new Date(req.body.apptDate);
-    console.log("Normalized apptDate:", apptDate);
+    
+    const apptDateAndTime = new Date(req.body.apptDateAndTime);
+    console.log("Normalized appointment date:", apptDateAndTime);
 
     // Check for existing bookings at the same time
     const existingBooking = await Booking.findOne({
       dentist: dentistId,
-      apptDate,
-      appointmentTime: req.body.appointmentTime,
+      apptDateAndTime,
     });
 
     console.log("Query Parameters:", {
       dentist: dentistId,
-      apptDate,
-      appointmentTime: req.body.appointmentTime,
+      apptDateAndTime,
     });
 
-    if (existingBooking) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "A booking already exists for this dentist at the same date and time.",
-      });
+    // Handle unavailable time slot creation (dentist or admin only)
+    if (req.body.isUnavailable) {
+      // Check if user is authorized to mark time slots as unavailable
+      if (req.user.role !== 'admin' && req.user.role !== 'dentist') {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Only dentists and admins can mark time slots as unavailable" 
+        });
+      }
+      
+      // If there's already an unavailable slot for this time, prevent duplicate
+      if (existingBooking && existingBooking.isUnavailable) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "This time slot is already marked as unavailable" 
+        });
+      }
+      
+      // If there's an existing booking for this time, cancel it first
+      if (existingBooking) {
+        // Update existing booking to cancelled status
+        await Booking.findByIdAndUpdate(existingBooking._id, { status: "Cancel" });
+        console.log('Existing booking cancelled to make way for unavailable slot');
+      }
+    } 
+    // Regular booking creation
+    else {
+      // Check for existing bookings by the user (limit non-admin users to one booking)
+      if (req.user.role !== "admin" && req.user.role !== "dentist") {
+        const existedBookings = await Booking.find({ user: userId, status: "Booked" });
+        if (existedBookings.length >= 1) {
+          return res.status(400).json({
+            success: false,
+            message: `The user with ID ${userId} is limited to one active booking.`,
+          });
+        }
+      }
+      
+      // If the slot is already booked or unavailable, prevent booking
+      if (existingBooking) {
+        return res.status(400).json({
+          success: false,
+          message: "This time slot is not available",
+        });
+      }
     }
-
-    // Create the booking with the correct owner
+    
+    // Create the booking with the correct parameters
     const booking = await Booking.create(req.body);
 
     // Return success response
@@ -180,14 +237,49 @@ exports.updateBooking = async (req, res, _next) => {
       });
     }
 
-    //Make sure user is the booking owner
-    if (booking.user.toString() !== req.user.id && req.user.role !== "admin") {
-      return res.status(401).json({
+    // Check authorization - user must be booking owner, admin, or dentist for respective bookings
+    const isOwner = booking.user.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+    const isDentist = req.user.role === "dentist" && booking.dentist.toString() === req.body.dentist;
+    
+    if (!isOwner && !isAdmin && !isDentist) {
+      return res.status(403).json({
         success: false,
         message: `User ${req.user.id} is not authorized to update this booking`,
       });
     }
 
+    // Handle special case for toggling unavailability status
+    if (req.body.hasOwnProperty('isUnavailable')) {
+      // Only dentists and admins can change availability
+      if (req.user.role !== 'admin' && req.user.role !== 'dentist') {
+        return res.status(403).json({
+          success: false,
+          message: "Only dentists and admins can change availability status",
+        });
+      }
+      
+      // If we're changing a regular booking to unavailable, cancel any existing booking
+      if (req.body.isUnavailable && !booking.isUnavailable) {
+        // Find any other bookings at the same time for this dentist
+        const conflictingBookings = await Booking.find({
+          dentist: booking.dentist,
+          apptDateAndTime: booking.apptDateAndTime,
+          _id: { $ne: booking._id }, // Exclude the current booking
+          isUnavailable: false
+        });
+        
+        // Cancel those bookings
+        if (conflictingBookings.length > 0) {
+          await Promise.all(conflictingBookings.map(async (b) => {
+            await Booking.findByIdAndUpdate(b._id, { status: "Cancel" });
+          }));
+          console.log(`Cancelled ${conflictingBookings.length} conflicting bookings`);
+        }
+      }
+    }
+
+    // Update the booking
     booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -216,12 +308,21 @@ exports.deleteBooking = async (req, res, _next) => {
       });
     }
 
-    //Make sure user is the booking owner
-    if (booking.user.toString() !== req.user.id && req.user.role !== "admin") {
-      return res.status(401).json({
+    // Check authorization - allow booking owner, admin, or dentist if it's their booking
+    const isOwner = booking.user.toString() === req.user.id;
+    const isAdmin = req.user.role === "admin";
+    const isDentist = req.user.role === "dentist" && booking.dentist.toString() === req.body.dentist;
+    
+    if (!isOwner && !isAdmin && !isDentist) {
+      return res.status(403).json({
         success: false,
         message: `User ${req.user.id} is not authorized to delete this booking`,
       });
+    }
+    
+    // Allow dentists to remove their unavailable slots
+    if (booking.isUnavaliable && req.user.role === "dentist") {
+      // Additional verification could be added here if needed
     }
 
     await booking.deleteOne();
