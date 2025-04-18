@@ -56,14 +56,12 @@ exports.login = async (req, res, _next) => {
   try {
     const { email, password } = req.body;
 
-    //Validate email & password
     if (!email || !password) {
       return res
         .status(400)
         .json({ success: false, msg: "Please provide an email and password" });
     }
 
-    //Check for user
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -72,7 +70,6 @@ exports.login = async (req, res, _next) => {
         .json({ success: false, msg: "Invalid credentials" });
     }
 
-    //Check if password matches
     const isMatch = await user.matchPassword(password);
 
     if (!isMatch) {
@@ -90,9 +87,7 @@ exports.login = async (req, res, _next) => {
   }
 };
 
-//Get token from model, create cookie and send response
 const sendTokenRespond = (user, statusCOde, res) => {
-  //Create token
   const token = user.getSignedJwtToken();
 
   const options = {
@@ -124,7 +119,6 @@ exports.getMe = async (req, res, _next) => {
 //@access  Private
 exports.logout = async (req, res) => {
   try {
-    // Get token from cookie parser
     const token = req.cookies.token;
 
     if (!token) {
@@ -133,10 +127,8 @@ exports.logout = async (req, res) => {
         .json({ success: false, msg: "No active session found" });
     }
 
-    // Add token to blacklist
     await Blacklist.create({ token });
 
-    // Clear the cookie
     res.cookie("token", "none", {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
@@ -152,7 +144,6 @@ exports.logout = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    // Check if the user is authorized to update their information
     if (req.params.id !== req.user.id && req.user.role !== "admin") {
       return res.status(401).json({
         success: false,
@@ -160,7 +151,6 @@ exports.updateUser = async (req, res) => {
       });
     }
 
-    // Find the user by their ID and update it
     const user = await User.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

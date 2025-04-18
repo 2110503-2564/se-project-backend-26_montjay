@@ -7,6 +7,7 @@ const Role = {
   ADMIN: "admin",
   DENTIST: "dentist"
 };
+
 module.exports = Role;
 
 const UserSchema = new mongoose.Schema({

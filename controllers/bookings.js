@@ -17,7 +17,7 @@ exports.getBookings = async (req, res, next) => {
       })
       .populate({
         path: "user",
-        select: "name", // Select only the 'name' field from the User model
+        select: "name tel email",
       });
   }
   // Admin can see all bookings or filter by dentist if dentistId exists
@@ -31,7 +31,7 @@ exports.getBookings = async (req, res, next) => {
         })
         .populate({
           path: "user",
-          select: "name", // Select only the 'name' field from the User model
+          select: "name tel email",
         });
     } else {
       query = Booking.find()
@@ -41,7 +41,7 @@ exports.getBookings = async (req, res, next) => {
         })
         .populate({
           path: "user",
-          select: "name", // Select only the 'name' field from the User model
+          select: "name tel email",
         });
     }
   }
@@ -49,10 +49,80 @@ exports.getBookings = async (req, res, next) => {
   try {
     const bookings = await query;
     res.status(200).json({ success: true, count: bookings.length, data: bookings });
-  } 
+  }
   catch (error) {
     console.error("Error fetching bookings:", error);
     return res.status(500).json({ success: false, message: "Cannot find Booking" });
+  }
+};
+
+//@desc     Get all dentists' schedules ( upcoming bookings )
+//@route    GET /api/v1/bookings/schedules
+//@access   Private
+exports.getAllDentistSchedules = async (req, res, _next) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Only admins can view all dentists' schedules",
+      });
+    }
+
+    const currentDate = new Date();
+
+    const dentists = await Dentist.find().populate({
+      path: "user",
+      select: "name tel email",
+    });
+
+    console.log("Fetched Dentists:", dentists);
+
+    const schedules = [];
+
+    for (const dentist of dentists) {
+      const upcomingBookings = await Booking.find({
+        dentist: dentist._id,
+        apptDateAndTime: { $gte: currentDate },
+        status: "Booked",
+        isUnavailable: false,
+      }).populate({
+        path: "user",
+        select: "name tel email",
+      }).sort({ apptDateAndTime: 1 });
+
+      schedules.push({
+        dentist: {
+          id: dentist._id,
+          name: dentist.user,
+          email: dentist.user,
+          tel: dentist.user,
+          yearsOfExperience: dentist.yearsOfExperience,
+          areaOfExpertise: dentist.areaOfExpertise,
+        },
+        upcomingBookings: upcomingBookings.map(booking => ({
+          id: booking._id,
+          date: booking.apptDateAndTime,
+          patientName: booking.user,
+          patientContact: booking.user,
+          patientEmail: booking.user,
+          status: booking.status,
+        })),
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      count: schedules.length,
+      data: schedules,
+    });
+  } catch (error) {
+    console.error("Error fetching dentist schedules:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Cannot fetch dentist schedules",
+      error: error.message,
+    });
   }
 };
 
@@ -63,7 +133,7 @@ exports.getUnavailableBooking = async (req, res, _next) => {
   try {
     const unavailable = await Booking.find({ isUnavailable: true });
     res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
-  } 
+  }
   catch (error) {
     console.error("Error fetching unavailable bookings:", error);
     return res.status(500).json({ success: false, message: "Cannot find unavailable slots" });
@@ -83,16 +153,16 @@ exports.getUnavailableBookingByDentID = async (req, res, _next) => {
       dentist: req.params.dentistId,
       isUnavailable: true
     });
-    
+
     res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
-  } 
+  }
   catch (error) {
     console.error("Error fetching unavailable bookings by dentist:", error);
     return res.status(500).json({ success: false, message: "Cannot find unavailable slots" });
   }
 }
 
-//@desc     Get one booking
+//@desc     Get Single booking
 //@route    GET /api/v1/bookings/:id
 //@access   Private
 exports.getBooking = async (req, res, _next) => {
@@ -139,7 +209,6 @@ exports.addBooking = async (req, res, _next) => {
       });
     }
 
-    // Check if dentist exists
     const dentist = await Dentist.findById(dentistId);
     if (!dentist) {
       return res.status(404).json({
@@ -148,9 +217,8 @@ exports.addBooking = async (req, res, _next) => {
       });
     }
 
-    // Ensure user ID is correctly assigned
     req.body.user = userId;
-    
+
     const apptDateAndTime = new Date(req.body.apptDateAndTime);
     console.log("Normalized appointment date:", apptDateAndTime);
 
@@ -165,34 +233,27 @@ exports.addBooking = async (req, res, _next) => {
       apptDateAndTime,
     });
 
-    // Handle unavailable time slot creation (dentist or admin only)
     if (req.body.isUnavailable) {
-      // Check if user is authorized to mark time slots as unavailable
       if (req.user.role !== 'admin' && req.user.role !== 'dentist') {
-        return res.status(403).json({ 
-          success: false, 
-          message: "Only dentists and admins can mark time slots as unavailable" 
+        return res.status(403).json({
+          success: false,
+          message: "Only dentists and admins can mark time slots as unavailable"
         });
       }
-      
-      // If there's already an unavailable slot for this time, prevent duplicate
+
       if (existingBooking && existingBooking.isUnavailable) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "This time slot is already marked as unavailable" 
+        return res.status(400).json({
+          success: false,
+          message: "This time slot is already marked as unavailable"
         });
       }
-      
-      // If there's an existing booking for this time, cancel it first
+
       if (existingBooking) {
-        // Update existing booking to cancelled status
         await Booking.findByIdAndUpdate(existingBooking._id, { status: "Cancel" });
         console.log('Existing booking cancelled to make way for unavailable slot');
       }
-    } 
-    // Regular booking creation
+    }
     else {
-      // Check for existing bookings by the user (limit non-admin users to one booking)
       if (req.user.role !== "admin" && req.user.role !== "dentist") {
         const existedBookings = await Booking.find({ user: userId, status: "Booked" });
         if (existedBookings.length >= 1) {
@@ -202,8 +263,7 @@ exports.addBooking = async (req, res, _next) => {
           });
         }
       }
-      
-      // If the slot is already booked or unavailable, prevent booking
+
       if (existingBooking) {
         return res.status(400).json({
           success: false,
@@ -211,11 +271,9 @@ exports.addBooking = async (req, res, _next) => {
         });
       }
     }
-    
-    // Create the booking with the correct owner
+
     const booking = await Booking.create(req.body);
 
-    // Return success response
     res.status(201).json({ success: true, data: booking });
   } catch (error) {
     console.error("Error creating booking:", error);
@@ -241,7 +299,7 @@ exports.updateBooking = async (req, res, _next) => {
     const isOwner = booking.user.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
     const isDentist = req.user.role === "dentist" && booking.dentist.toString() === req.body.dentist;
-    
+
     if (!isOwner && !isAdmin && !isDentist) {
       return res.status(403).json({
         success: false,
@@ -251,25 +309,24 @@ exports.updateBooking = async (req, res, _next) => {
 
     // Handle special case for toggling unavailability status
     if (req.body.hasOwnProperty('isUnavailable')) {
-      // Only dentists and admins can change availability
+      // Check if user is admin or dentist
       if (req.user.role !== 'admin' && req.user.role !== 'dentist') {
         return res.status(403).json({
           success: false,
           message: "Only dentists and admins can change availability status",
         });
       }
-      
+
       // If we're changing a regular booking to unavailable, cancel any existing booking
       if (req.body.isUnavailable && !booking.isUnavailable) {
         // Find any other bookings at the same time for this dentist
         const conflictingBookings = await Booking.find({
           dentist: booking.dentist,
           apptDateAndTime: booking.apptDateAndTime,
-          _id: { $ne: booking._id }, // Exclude the current booking
+          _id: { $ne: booking._id },
           isUnavailable: false
         });
-        
-        // Cancel those bookings
+
         if (conflictingBookings.length > 0) {
           await Promise.all(conflictingBookings.map(async (b) => {
             await Booking.findByIdAndUpdate(b._id, { status: "Cancel" });
@@ -279,7 +336,6 @@ exports.updateBooking = async (req, res, _next) => {
       }
     }
 
-    // Update the booking
     booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -332,19 +388,17 @@ exports.deleteBooking = async (req, res, _next) => {
       });
     }
 
-    // Check authorization - allow booking owner, admin, or dentist if it's their booking
     const isOwner = booking.user.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
     const isDentist = req.user.role === "dentist" && booking.dentist.toString() === req.body.dentist;
-    
+
     if (!isOwner && !isAdmin && !isDentist) {
       return res.status(403).json({
         success: false,
         message: `User ${req.user.id} is not authorized to delete this booking`,
       });
     }
-    
-    // Allow dentists to remove their unavailable slots
+
     if (booking.isUnavaliable && req.user.role === "dentist") {
       // Additional verification could be added here if needed
     }

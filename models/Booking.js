@@ -17,7 +17,7 @@ const BookingSchema = new mongoose.Schema({
     },
     isUnavailable: {
         type: Boolean,
-        default: false 
+        default: false
     },
     status: {
         type: String,
@@ -33,4 +33,4 @@ const BookingSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("Booking",BookingSchema);
+module.exports = mongoose.model("Booking", BookingSchema);

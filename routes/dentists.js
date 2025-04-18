@@ -14,12 +14,10 @@ const commentRouter = require('./comments');
 
 const { protect, authorize } = require("../middleware/auth");
 
-// Re-route into other resource routers
 router.use("/:dentistId/unavailable", bookingRouter);
 router.use("/:dentistId/bookings", bookingRouter);
 router.use("/:dentistId/comments", commentRouter);
 
-// Dentist routes
 router
   .route("/")
   .get(getDentists)

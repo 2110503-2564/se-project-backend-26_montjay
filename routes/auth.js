@@ -11,8 +11,6 @@ router.post("/registerDent", protect, authorize("admin"), registerDentist);
 router.post("/login", login);
 router.get("/logout", protect, logout);
 router.get("/me", protect, getMe);
-router.put("/updateUser/:id", protect, authorize("admin","user"), updateUser); 
- 
-
+router.put("/updateUser/:id", protect, authorize("admin", "user"), updateUser);
 
 module.exports = router;
