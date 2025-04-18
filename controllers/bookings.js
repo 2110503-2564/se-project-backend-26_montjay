@@ -70,44 +70,56 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
     }
 
     const currentDate = new Date();
+    // Filter by date range if provided
+    const startDate = req.query.startDate ? new Date(req.query.startDate) : currentDate;
+    const endDate = req.query.endDate ? new Date(req.query.endDate) : new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000); // Default to 30 days ahead
 
     const dentists = await Dentist.find().populate({
       path: "user",
       select: "name tel email",
     });
 
-    console.log("Fetched Dentists:", dentists);
-
     const schedules = [];
 
     for (const dentist of dentists) {
+      // Get all booked appointments
       const upcomingBookings = await Booking.find({
         dentist: dentist._id,
-        apptDateAndTime: { $gte: currentDate },
+        apptDate: { $gte: startDate, $lte: endDate },
         status: "Booked",
         isUnavailable: false,
       }).populate({
         path: "user",
         select: "name tel email",
-      }).sort({ apptDateAndTime: 1 });
+      }).sort({ apptDate: 1 });
+
+      // Get all unavailable time slots ( holidays, off-hours )
+      const unavailableSlots = await Booking.find({
+        dentist: dentist._id,
+        apptDate: { $gte: startDate, $lte: endDate },
+        isUnavaliable: true,
+      }).sort({ apptDate: 1 });
 
       schedules.push({
         dentist: {
           id: dentist._id,
-          name: dentist.user,
-          email: dentist.user,
-          tel: dentist.user,
+          user: dentist.user,
           yearsOfExperience: dentist.yearsOfExperience,
           areaOfExpertise: dentist.areaOfExpertise,
         },
         upcomingBookings: upcomingBookings.map(booking => ({
           id: booking._id,
           date: booking.apptDateAndTime,
-          patientName: booking.user,
-          patientContact: booking.user,
-          patientEmail: booking.user,
+          patientName: booking.user ? booking.user.name : 'Unknown',
+          patientContact: booking.user ? booking.user.tel : '',
+          patientEmail: booking.user ? booking.user.email : '',
           status: booking.status,
         })),
+        unavailableSlots: unavailableSlots.map(slot => ({
+          id: slot._id,
+          date: slot.apptDateAndTime,
+          createdAt: slot.createdAt
+        }))
       });
     }
 
@@ -131,7 +143,7 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
 //@access   Private
 exports.getUnavailableBooking = async (req, res, _next) => {
   try {
-    const unavailable = await Booking.find({ isUnavailable: true });
+    const unavailable = await Booking.find({ isUnavaliable: true });
     res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
   }
   catch (error) {
@@ -151,7 +163,7 @@ exports.getUnavailableBookingByDentID = async (req, res, _next) => {
 
     const unavailable = await Booking.find({
       dentist: req.params.dentistId,
-      isUnavailable: true
+      isUnavaliable: true
     });
 
     res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
