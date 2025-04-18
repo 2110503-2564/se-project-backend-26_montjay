@@ -14,14 +14,14 @@ exports.getComments = async (req, res) => {
   try {
     const comments = await query;
     res.status(200).json({ success: true, count: comments.length, data: comments });
-  } 
+  }
   catch (error) {
     console.error("Error fetching bookings:", error);
     return res.status(500).json({ success: false, message: "Cannot find Booking" });
   }
 };
 
-exports.getCommentsByDentId = async (req,res,next) => {
+exports.getCommentsByDentId = async (req, res, next) => {
   try {
     console.log("Request Params ID:", req.params.dentistId);
 
@@ -116,8 +116,8 @@ exports.addComment = async (req, res, next) => {
     req.body.user = userId;
 
     // Check for existing bookings by the user
-    const existComment = await Comment.findOne({ 
-      user: userId, 
+    const existComment = await Comment.findOne({
+      user: userId,
       dentist: dentistId
     });
 

@@ -17,7 +17,7 @@ const BookingSchema = new mongoose.Schema({
     },
     isUnavaliable: {
         type: Boolean,
-        default: false 
+        default: false
     },
     createdAt: {
         type: Date,
@@ -25,4 +25,4 @@ const BookingSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model("Booking",BookingSchema);
+module.exports = mongoose.model("Booking", BookingSchema);
