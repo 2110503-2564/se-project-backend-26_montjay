@@ -46,7 +46,7 @@ exports.registerDentist = async (req, res, _next) => {
     });
 
     // Send token response
-    sendTokenRespond(user,dentist, 200, res);
+    sendTokenRespond(user, 200, res);
 
   } catch (err) {
     res.status(400).json({ success: false });
