@@ -27,8 +27,9 @@ exports.register = async (req, res, _next) => {
 
 exports.registerDentist = async (req, res, _next) => {
   try {
-    const { name, email, password, role, tel } = req.body;
-    //Create user
+    const { name, email, password, role, tel, yearsOfExperience, areaOfExpertise } = req.body;
+
+    // Create user
     const user = await User.create({
       name,
       email,
@@ -36,18 +37,23 @@ exports.registerDentist = async (req, res, _next) => {
       tel,
       role,
     });
-    const dentist = await Dentist({
+
+    // Create dentist
+    const dentist = await Dentist.create({
       user: user._id,
       yearsOfExperience,
-      areaOfExpertise
+      areaOfExpertise,
     });
-    sendTokenRespond(user, dentist, 200, res);
+
+    // Send token response
+    sendTokenRespond(user,dentist, 200, res);
 
   } catch (err) {
     res.status(400).json({ success: false });
-    console.log(err.stack);
+    console.error(err.stack);
   }
 };
+
 
 //@desc     Login user
 //@route    POST /api/v1/auth/login
