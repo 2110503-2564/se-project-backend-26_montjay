@@ -13,7 +13,11 @@ exports.getBookings = async (req, res, next) => {
     query = Booking.find({ user: req.user.id })
       .populate({
         path: "dentist",
-        select: "name yearsOfExperience areaOfExpertise validate tel",
+        select: "yearsOfExperience areaOfExpertise validate",
+        populate: {
+          path: "user",
+          select: "name tel email",
+        }
       })
       .populate({
         path: "user",
@@ -27,7 +31,11 @@ exports.getBookings = async (req, res, next) => {
       query = Booking.find({ dentist: req.params.dentistId })
         .populate({
           path: "dentist",
-          select: "name yearsOfExperience areaOfExpertise validate tel",
+          select: "yearsOfExperience areaOfExpertise validate",
+          populate: {
+            path: "user",
+            select: "name tel email",
+          }
         })
         .populate({
           path: "user",
@@ -37,7 +45,11 @@ exports.getBookings = async (req, res, next) => {
       query = Booking.find()
         .populate({
           path: "dentist",
-          select: "name yearsOfExperience areaOfExpertise validate tel",
+          select: "yearsOfExperience areaOfExpertise validate",
+          populate: {
+            path: "user",
+            select: "name tel email",
+          }
         })
         .populate({
           path: "user",
@@ -188,7 +200,11 @@ exports.getBooking = async (req, res, _next) => {
 
     const booking = await Booking.findById(req.params.id).populate({
       path: "dentist",
-      select: "name yearsOfExperience areaOfExpertise validate tel",
+      select: "yearsOfExperience areaOfExpertise validate",
+      populate: {
+        path: "user",
+        select: "name tel email",
+      }
     });
 
     console.log("Fetched Booking:", booking);
@@ -353,11 +369,11 @@ exports.updateBooking = async (req, res, _next) => {
       runValidators: true,
     });
 
-    if(booking.isUnavailable){
-      if(req.user.role == "user") {
+    if (booking.isUnavailable) {
+      if (req.user.role == "user") {
         return res
-        .status(500)
-        .json({ success: false, message: "You don't have permission" });
+          .status(500)
+          .json({ success: false, message: "You don't have permission" });
       }
 
       booking.status = "Cancel";
@@ -367,9 +383,9 @@ exports.updateBooking = async (req, res, _next) => {
         apptDateAndTime: booking.apptDateAndTime,
         isUnavailable: false
       },
-      {
-        status: "Cancel"
-      });
+        {
+          status: "Cancel"
+        });
       if (result) {
         console.log('Cancel booking');
       } else {
