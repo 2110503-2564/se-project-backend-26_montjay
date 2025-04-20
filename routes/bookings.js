@@ -5,7 +5,8 @@ const {
   addBooking,
   updateBooking,
   deleteBooking,
-  getAllDentistSchedules
+  getAllDentistSchedules,
+  getBookingsForDentist
 } = require("../controllers/bookings");
 
 const router = express.Router({ mergeParams: true });
@@ -20,6 +21,9 @@ router.route("/")
 
 router.route("/schedules")
   .get(protect, authorize("admin"), getAllDentistSchedules);
+
+router.route("/dentist")
+  .get(protect, authorize("admin", "dentist"), getBookingsForDentist);
 
 router.route("/:id")
   .get(protect, getBooking)

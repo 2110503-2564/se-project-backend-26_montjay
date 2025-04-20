@@ -69,6 +69,76 @@ exports.getBookings = async (req, res, next) => {
   }
 };
 
+//@desc     Get bookings for dentist
+//@route    GET /api/v1/bookings/dentist
+//@access   Public
+exports.getBookingsForDentist = async (req, res, next) => {
+  if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
+    return res.status(400).json({ message: "Invalid user ID" });
+  }
+  console.log("req.user._id:", req.user.id);
+  let query;
+
+  // Dentist can see a schedule
+  if (req.user.role === "dentist") {
+    query = Booking.find({ dentist: req.user.id })
+      .populate({
+        path: "dentist",
+        select: "yearsOfExperience areaOfExpertise validate",
+        populate: {
+          path: "user",
+          select: "name tel email",
+        }
+      })
+      .populate({
+        path: "user",
+        select: "name tel email",
+      });
+  }
+  // Admin can see all bookings
+  else if (req.user.role === "admin") {
+    query = Booking.find()
+      .populate({
+        path: "dentist",
+        select: "yearsOfExperience areaOfExpertise validate",
+        populate: {
+          path: "user",
+          select: "name tel email",
+        }
+      })
+      .populate({
+        path: "user",
+        select: "name tel email",
+      });
+  }
+  // General users can only see their own bookings
+  else {
+    query = Booking.find({ user: req.user.id })
+      .populate({
+        path: "dentist",
+        select: "yearsOfExperience areaOfExpertise validate",
+        populate: {
+          path: "user",
+          select: "name tel email",
+        }
+      })
+      .populate({
+        path: "user",
+        select: "name tel email",
+      });
+  }
+
+  try {
+    const bookings = await query;
+    console.log("bookings:", bookings);
+    res.status(200).json({ success: true, count: bookings.length, data: bookings });
+  }
+  catch (error) {
+    console.error("Error fetching bookings:", error);
+    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+  }
+};
+
 //@desc     Get all dentists' schedules ( upcoming bookings )
 //@route    GET /api/v1/bookings/schedules
 //@access   Private
