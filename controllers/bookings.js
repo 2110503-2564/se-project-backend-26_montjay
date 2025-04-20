@@ -73,15 +73,18 @@ exports.getBookings = async (req, res, next) => {
 //@route    GET /api/v1/bookings/dentist
 //@access   Public
 exports.getBookingsForDentist = async (req, res, next) => {
-  if (!mongoose.Types.ObjectId.isValid(req.user._id)) {
-    return res.status(400).json({ message: "Invalid user ID" });
-  }
-  console.log("req.user._id:", req.user.id);
   let query;
 
   // Dentist can see a schedule
   if (req.user.role === "dentist") {
-    query = Booking.find({ dentist: req.user.id })
+    try {
+      const dentistId = await Dentist.findOne({ user: req.user._id })
+
+    if (!dentistId) {
+      return res.status(400).json({ message: "Invalid dentist ID" });
+    }
+
+    query = Booking.find({ dentist: dentistId._id })
       .populate({
         path: "dentist",
         select: "yearsOfExperience areaOfExpertise validate",
@@ -94,6 +97,11 @@ exports.getBookingsForDentist = async (req, res, next) => {
         path: "user",
         select: "name tel email",
       });
+    }
+    catch (error) {
+      console.error("Error fetching bookings:", error);
+      return res.status(500).json({ success: false, message: "Cannot find Booking" });
+    }
   }
   // Admin can see all bookings
   else if (req.user.role === "admin") {
@@ -113,7 +121,7 @@ exports.getBookingsForDentist = async (req, res, next) => {
   }
   // General users can only see their own bookings
   else {
-    query = Booking.find({ user: req.user.id })
+    query = Booking.find({ user: req.user._id })
       .populate({
         path: "dentist",
         select: "yearsOfExperience areaOfExpertise validate",
