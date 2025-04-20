@@ -5,8 +5,6 @@ const {
   addBooking,
   updateBooking,
   deleteBooking,
-  getUnavailableBooking,
-  getUnavailableBookingByDentID,
   getAllDentistSchedules
 } = require("../controllers/bookings");
 
@@ -16,15 +14,9 @@ const { protect, authorize } = require("../middleware/auth");
 
 router.route("/")
   .get(protect, (req, res, next) => {
-    if (req.baseUrl.includes("unavailable")) {
-      return getUnavailableBookingByDentID(req, res, next);
-    }
     return getBookings(req, res, next);
   })
   .post(protect, authorize("admin", "user", "dentist"), addBooking);
-
-router.route("/unavailable")
-  .get(protect, authorize("admin", "dentist"), getUnavailableBooking);
 
 router.route("/schedules")
   .get(protect, authorize("admin"), getAllDentistSchedules);
