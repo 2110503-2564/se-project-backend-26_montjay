@@ -25,10 +25,11 @@ exports.getOffHours = async (req, res) => {
 };
 
 //@desc     Get all OffHours by ownerId
-//@route    GET /api/v1/offHours/:ownerId
+//@route    GET /api/v1/offHours/owner/:ownerId
 //@access   Public
 exports.getOffHoursByOwnerId = async (req, res, next) => {
   try {
+    const ownerId = req.params.ownerId.trim();
     console.log("Request Params ID:", req.params.ownerId);
 
     // Validate ObjectId format
@@ -37,7 +38,7 @@ exports.getOffHoursByOwnerId = async (req, res, next) => {
     }
 
     // Query database
-    const offHours = await OffHour.find({ owner: req.params.ownerId }).populate({
+    const offHours = await OffHour.find({ owner: ownerId }).populate({
         path: "owner",
         select: "name tel email",
     });
@@ -48,7 +49,7 @@ exports.getOffHoursByOwnerId = async (req, res, next) => {
       return res.status(404).json({ success: false, message: `No comment found with ID ${req.params.ownerId}` });
     }
 
-    res.status(200).json({ success: true, count: comments.length, data: offHours });
+    res.status(200).json({ success: true, count: offHours.length, data: offHours });
   } catch (error) {
     console.error("Error fetching offHours:", error);
     return res.status(500).json({ success: false, message: "Cannot find offHours" });
@@ -141,7 +142,23 @@ exports.addOffHour = async (req, res, next) => {
 
     const isDentist = await Dentist.findOne({ user: ownerId });
 
-    if(isDentist){
+    if( req.body.isForAllDentist === true) {
+      const result = await Booking.updateMany(
+        {
+          apptDateAndTime: {
+            $gte: new Date(startDate),
+            $lte: new Date(endDate),
+          },
+          isUnavailable: false,
+          status: "Booked",
+        },
+        {
+          $set: { status: "cancel", isUnavailable: true },
+        }
+      );
+      console.log(`Canceled booking: ${result.matchedCount}`);
+    }
+    else if(isDentist){
       const result = await Booking.updateMany(
         {
           dentist: isDentist,

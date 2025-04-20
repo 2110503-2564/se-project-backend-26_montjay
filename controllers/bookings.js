@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Booking = require("../models/Booking");
 const Dentist = require("../models/Dentist");
+const offHours = require("../models/OffHour")
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -220,48 +221,33 @@ exports.addBooking = async (req, res, _next) => {
       apptDateAndTime,
     });
 
-    console.log("Query Parameters:", {
-      dentist: dentistId,
-      apptDateAndTime,
+    const existingOffHours = await offHours.find({
+      $or: [
+        {
+          owner: dentist.user,
+          startDate: { $lte: apptDateAndTime },
+          endDate: { $gte: apptDateAndTime },
+        },
+        {
+          isForAllDentist: true,
+          startDate: { $lte: apptDateAndTime }, 
+          endDate: { $gte: apptDateAndTime },  
+        },
+      ],
     });
 
-    if (req.body.isUnavailable) {
-      if (req.user.role !== 'admin' && req.user.role !== 'dentist') {
-        return res.status(403).json({
-          success: false,
-          message: "Only dentists and admins can mark time slots as unavailable"
-        });
-      }
-
-      if (existingBooking && existingBooking.isUnavailable) {
-        return res.status(400).json({
-          success: false,
-          message: "This time slot is already marked as unavailable"
-        });
-      }
-
-      if (existingBooking) {
-        await Booking.findByIdAndUpdate(existingBooking._id, { status: "Cancel" });
-        console.log('Existing booking cancelled to make way for unavailable slot');
-      }
+    if(existingOffHours.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "This time slot is not available"
+      });
     }
-    else {
-      if (req.user.role !== "admin" && req.user.role !== "dentist") {
-        const existedBookings = await Booking.find({ user: userId, status: "Booked" });
-        if (existedBookings.length >= 1) {
-          return res.status(400).json({
-            success: false,
-            message: `The user with ID ${userId} is limited to one active booking.`,
-          });
-        }
-      }
 
-      if (existingBooking) {
-        return res.status(400).json({
-          success: false,
-          message: "This time slot is not available",
-        });
-      }
+    if(existingBooking){
+      return res.status(400).json({
+        success: false,
+        message: "Some people have booked this time."
+      });
     }
 
     const booking = await Booking.create(req.body);

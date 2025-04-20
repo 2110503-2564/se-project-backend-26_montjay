@@ -16,6 +16,6 @@ router.route("/").get(protect, getOffHours).post(protect, authorize("admin", "de
 
 router.route("/:id").get(protect, getOffHour).put(protect, authorize("admin", "dentist"), updateOffHour).delete(protect, authorize("admin", "dentist"), deleteOffHour);
 
-router.route("/:ownerId").get(protect, getOffHoursByOwnerId);
+router.route("/owner/:ownerId").get(protect, getOffHoursByOwnerId);
 
 module.exports = router;
