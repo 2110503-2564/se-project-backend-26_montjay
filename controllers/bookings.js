@@ -150,42 +150,6 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
   }
 };
 
-//@desc     Get Unavailable Booking
-//@route    GET /api/v1/bookings/unavailable
-//@access   Private
-exports.getUnavailableBooking = async (req, res, _next) => {
-  try {
-    const unavailable = await Booking.find({ isUnavaliable: true });
-    res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
-  }
-  catch (error) {
-    console.error("Error fetching unavailable bookings:", error);
-    return res.status(500).json({ success: false, message: "Cannot find unavailable slots" });
-  }
-}
-
-//@desc     Get Unavailable Booking by Dentist ID
-//@route    GET /api/v1/dentists/:dentistId/unavailable
-//@access   Private
-exports.getUnavailableBookingByDentID = async (req, res, _next) => {
-  try {
-    if (!req.params.dentistId) {
-      return res.status(400).json({ success: false, message: "Dentist ID is required" });
-    }
-
-    const unavailable = await Booking.find({
-      dentist: req.params.dentistId,
-      isUnavaliable: true
-    });
-
-    res.status(200).json({ success: true, count: unavailable.length, data: unavailable });
-  }
-  catch (error) {
-    console.error("Error fetching unavailable bookings by dentist:", error);
-    return res.status(500).json({ success: false, message: "Cannot find unavailable slots" });
-  }
-}
-
 //@desc     Get Single booking
 //@route    GET /api/v1/bookings/:id
 //@access   Private
