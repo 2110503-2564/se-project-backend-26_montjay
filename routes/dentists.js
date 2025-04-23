@@ -10,7 +10,7 @@ const {
 const router = express.Router();
 
 const bookingRouter = require("./bookings");
-const commentRouter = require('./comments');
+const commentRouter = require("./comments");
 
 const { protect, authorize } = require("../middleware/auth");
 

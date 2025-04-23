@@ -9,7 +9,7 @@ const User = require("../models/User")
 //@access   Public
 exports.getOffHours = async (req, res) => {
   try {
-    let query = OffHour.find()
+    const query = OffHour.find()
     .populate({
       path: "owner",
       select: "name tel email",

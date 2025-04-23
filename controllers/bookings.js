@@ -201,9 +201,9 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
         upcomingBookings: upcomingBookings.map(booking => ({
           id: booking._id,
           date: booking.apptDateAndTime,
-          patientName: booking.user ? booking.user.name : 'Unknown',
-          patientContact: booking.user ? booking.user.tel : '',
-          patientEmail: booking.user ? booking.user.email : '',
+          patientName: booking.user ? booking.user.name : "Unknown",
+          patientContact: booking.user ? booking.user.tel : "",
+          patientEmail: booking.user ? booking.user.email : "",
           status: booking.status,
         })),
         unavailableSlots: unavailableSlots.map(slot => ({
@@ -364,9 +364,9 @@ exports.updateBooking = async (req, res, _next) => {
     }
 
     // Handle special case for toggling unavailability status
-    if (req.body.hasOwnProperty('isUnavailable')) {
+    if (req.body.hasOwnProperty("isUnavailable")) {
       // Check if user is admin or dentist
-      if (req.user.role !== 'admin' && req.user.role !== 'dentist') {
+      if (req.user.role !== "admin" && req.user.role !== "dentist") {
         return res.status(403).json({
           success: false,
           message: "Only dentists and admins can change availability status",
@@ -415,9 +415,9 @@ exports.updateBooking = async (req, res, _next) => {
           status: "Cancel"
         });
       if (result) {
-        console.log('Cancel booking');
+        console.log("Cancel booking");
       } else {
-        console.log('No booking found to cancel.');
+        console.log("No booking found to cancel.");
       }
     }
 

@@ -12,8 +12,8 @@ const rateLimit = require("express-rate-limit");
 const auth = require("./routes/auth");
 const dentists = require("./routes/dentists");
 const bookings = require("./routes/bookings");
-const comments = require('./routes/comments')
-const offHours = require('./routes/offHours')
+const comments = require("./routes/comments")
+const offHours = require("./routes/offHours")
 const { version } = require("mongoose");
 
 // Load env vars

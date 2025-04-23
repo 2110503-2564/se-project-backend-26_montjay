@@ -6,7 +6,7 @@ const Dentist = require("../models/Dentist");
 //@route    GET /api/v1/comments
 //@access   Public
 exports.getComments = async (req, res) => {
-  let query = Comment.find()
+  const query = Comment.find()
     .populate({
       path: "dentist",
       select: "name yearsOfExperience areaOfExpertise validate tel",
