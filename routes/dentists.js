@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getDentists,
   getDentist,
+  getDentistDetail,
   createDentist,
   updateDentist,
   deleteDentist,
@@ -22,6 +23,10 @@ router
   .route("/")
   .get(getDentists)
   .post(protect, authorize("admin"), createDentist);
+
+router
+  .route("/detail/:dentID")  
+  .get(getDentistDetail)
 
 router
   .route("/:id")

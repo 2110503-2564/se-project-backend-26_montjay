@@ -50,4 +50,11 @@ DentistSchema.virtual("comments", {
   justOne: false,
 });
 
+DentistSchema.virtual("OffHours", {
+  ref: "OffHour",
+  localField: "_id",
+  foreignField: "owner",
+  justOne: false
+})
+
 module.exports = mongoose.model("Dentist", DentistSchema);
