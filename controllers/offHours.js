@@ -72,7 +72,7 @@ exports.getOffHour = async (req, res, _next) => {
     const objectId = new mongoose.Types.ObjectId(req.params.id);
 
     // Query database
-    const offHour = await OffHour.findOne({ id: objectId }).populate({
+    const offHour = await OffHour.findOne({ _id: objectId }).populate({
         path: "owner",
         select: "name tel email",
     });
