@@ -21,35 +21,65 @@ exports.getComments = async (req, res) => {
   }
 };
 
+//@desc     Get all Comments by dentistId
+//@route    GET /api/v1/comments/dentist
+//@access   Public
 exports.getCommentsByDentId = async (req, res, next) => {
-  try {
-    console.log("Request Params ID:", req.params.dentistId);
-
-    // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(req.params.dentistId)) {
-      return res.status(400).json({ success: false, message: "Invalid Dentist ID format" });
+  let query;
+  
+  if (req.user.role === "dentist") {
+    try {
+      const dentistId = await Dentist.findOne({ user: req.user._id })
+  
+    if (!dentistId) {
+      return res.status(400).json({ message: "Invalid dentist ID" });
     }
-
-    // Convert string ID to ObjectId
-    const objectId = new mongoose.Types.ObjectId(req.params.dentistId);
-
-    // Query database
-    const comments = await Comment.find({ id: objectId }).populate({
-      path: "dentist",
-      select: "name yearsOfExperience areaOfExpertise validate tel",
-    });
-
-    console.log("Fetched Booking:", comments);
-
-    if (!comments) {
-      return res.status(404).json({ success: false, message: `No comment found with ID ${req.params.dentistId}` });
+    query = Comment.find({ dentist: dentistId._id })
+      .populate({
+        path: "dentist",
+        select: "name yearsOfExperience areaOfExpertise validate tel",
+      });
     }
-
-    res.status(200).json({ success: true, count: comments.length, data: comments });
-  } catch (error) {
-    console.error("Error fetching booking:", error);
-    return res.status(500).json({ success: false, message: "Cannot find comments" });
-  }
+      catch (error) {
+        console.error("Error fetching comments:", error);
+        return res.status(500).json({ success: false, message: "Cannot find comments" });
+      }
+    }
+  // Admin can see all comments
+  else if (req.user.role === "admin") {
+    if (req.query.dentistId) {
+      console.log("Fetching comments for Dentist ID:", req.query.dentistId);
+      query = Comment.find({ dentist: req.query.dentistId })
+        .populate({
+          path: "dentist",
+          select: "name yearsOfExperience areaOfExpertise validate tel",
+        });
+    }
+    else {
+      query = Comment.find()
+        .populate({
+          path: "dentist",
+          select: "name yearsOfExperience areaOfExpertise validate tel",
+        });
+    }
+    }
+    // General users can only see their own comments
+    else {
+      query = Booking.find({ user: req.user._id })
+        .populate({
+          path: "dentist",
+          select: "name yearsOfExperience areaOfExpertise validate tel",
+        });
+    }
+    try {
+      const comments = await query;
+      console.log("comments:", comments);
+      res.status(200).json({ success: true, count: comments.length, data: comments });
+    }
+    catch (error) {
+      console.error("Error fetching comments:", error);
+      return res.status(500).json({ success: false, message: "Cannot find comments" });
+    }
 }
 
 //@desc     Get one Comment

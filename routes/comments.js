@@ -14,8 +14,8 @@ const { protect, authorize } = require("../middleware/auth");
 
 router.route("/").get(protect, getComments).post(protect, authorize("admin", "user"), addComment);
 
-router.route("/:id").get(protect, getComment).put(protect, authorize("admin", "user"), updateComment).delete(protect, authorize("admin", "user"), deleteComment);
+router.route("/dentist").get(protect, getCommentsByDentId);
 
-router.route("/:dentId").get(protect, getCommentsByDentId);
+router.route("/:id").get(protect, getComment).put(protect, authorize("admin", "user"), updateComment).delete(protect, authorize("admin", "user"), deleteComment);
 
 module.exports = router;
