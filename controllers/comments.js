@@ -45,9 +45,9 @@ exports.getCommentsByDentId = async (req, res, next) => {
   else {
     query = Comment.find()
       .populate({
-        path: "dentist",
-        select: "name yearsOfExperience areaOfExpertise validate tel",
-      });
+        path: "user",
+        select:"name"
+      })
   }
 
   try {

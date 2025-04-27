@@ -279,12 +279,13 @@ const router = express.Router();
 
 const bookingRouter = require("./bookings");
 const commentRouter = require("./comments");
+const offHoursRouter = require("./offHours");
 
 const { protect, authorize } = require("../middleware/auth");
 
-router.use("/:dentistId/unavailable", bookingRouter);
 router.use("/:dentistId/bookings", bookingRouter);
 router.use("/:dentistId/comments", commentRouter);
+router.use("/:dentistId/offHours", offHoursRouter);
 
 router
   .route("/")
