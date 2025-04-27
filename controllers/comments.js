@@ -26,8 +26,7 @@ exports.getComments = async (req, res) => {
 //@access   Public
 exports.getCommentsByDentId = async (req, res, next) => {
   let query;
-
-  if (req.user.role === "dentist") {
+   if (req.user.role === "dentist") {
     try {
       const dentistId = await Dentist.findOne({ user: req.user._id })
 
@@ -36,9 +35,9 @@ exports.getCommentsByDentId = async (req, res, next) => {
       }
       query = Comment.find({ dentist: dentistId._id })
         .populate({
-          path: "dentist",
-          select: "name yearsOfExperience areaOfExpertise validate tel",
-        });
+          path: "user",
+          select: "name",
+        })
     }
     catch (error) {
       console.error("Error fetching comments:", error);
@@ -51,15 +50,15 @@ exports.getCommentsByDentId = async (req, res, next) => {
       console.log("Fetching comments for Dentist ID:", req.query.dentistId);
       query = Comment.find({ dentist: req.query.dentistId })
         .populate({
-          path: "dentist",
-          select: "name yearsOfExperience areaOfExpertise validate tel",
+          path: "user",
+          select: "name",
         });
     }
     else {
       query = Comment.find()
         .populate({
-          path: "dentist",
-          select: "name yearsOfExperience areaOfExpertise validate tel",
+          path: "user",
+          select: "name",
         });
     }
   }
@@ -67,8 +66,8 @@ exports.getCommentsByDentId = async (req, res, next) => {
   else {
     query = Booking.find({ user: req.user._id })
       .populate({
-        path: "dentist",
-        select: "name yearsOfExperience areaOfExpertise validate tel",
+        path: "user",
+        select: "name",
       });
   }
   try {
