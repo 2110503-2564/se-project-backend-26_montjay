@@ -80,23 +80,23 @@ exports.getBookingsForDentist = async (req, res, next) => {
     try {
       const dentistId = await Dentist.findOne({ user: req.user._id })
 
-    if (!dentistId) {
-      return res.status(400).json({ message: "Invalid dentist ID" });
-    }
+      if (!dentistId) {
+        return res.status(400).json({ message: "Invalid dentist ID" });
+      }
 
-    query = Booking.find({ dentist: dentistId._id })
-      .populate({
-        path: "dentist",
-        select: "yearsOfExperience areaOfExpertise validate",
-        populate: {
+      query = Booking.find({ dentist: dentistId._id })
+        .populate({
+          path: "dentist",
+          select: "yearsOfExperience areaOfExpertise validate",
+          populate: {
+            path: "user",
+            select: "name tel email",
+          }
+        })
+        .populate({
           path: "user",
           select: "name tel email",
-        }
-      })
-      .populate({
-        path: "user",
-        select: "name tel email",
-      });
+        });
     }
     catch (error) {
       console.error("Error fetching bookings:", error);
@@ -308,20 +308,20 @@ exports.addBooking = async (req, res, _next) => {
         },
         {
           isForAllDentist: true,
-          startDate: { $lte: apptDateAndTime }, 
-          endDate: { $gte: apptDateAndTime },  
+          startDate: { $lte: apptDateAndTime },
+          endDate: { $gte: apptDateAndTime },
         },
       ],
     });
 
-    if(existingOffHours.length > 0) {
+    if (existingOffHours.length > 0) {
       return res.status(400).json({
         success: false,
         message: "This time slot is not available"
       });
     }
 
-    if(existingBooking){
+    if (existingBooking) {
       return res.status(400).json({
         success: false,
         message: "Some people have booked this time."

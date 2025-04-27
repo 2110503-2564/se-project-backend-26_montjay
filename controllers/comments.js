@@ -26,25 +26,25 @@ exports.getComments = async (req, res) => {
 //@access   Public
 exports.getCommentsByDentId = async (req, res, next) => {
   let query;
-  
+
   if (req.user.role === "dentist") {
     try {
       const dentistId = await Dentist.findOne({ user: req.user._id })
-  
-    if (!dentistId) {
-      return res.status(400).json({ message: "Invalid dentist ID" });
-    }
-    query = Comment.find({ dentist: dentistId._id })
-      .populate({
-        path: "dentist",
-        select: "name yearsOfExperience areaOfExpertise validate tel",
-      });
-    }
-      catch (error) {
-        console.error("Error fetching comments:", error);
-        return res.status(500).json({ success: false, message: "Cannot find comments" });
+
+      if (!dentistId) {
+        return res.status(400).json({ message: "Invalid dentist ID" });
       }
+      query = Comment.find({ dentist: dentistId._id })
+        .populate({
+          path: "dentist",
+          select: "name yearsOfExperience areaOfExpertise validate tel",
+        });
     }
+    catch (error) {
+      console.error("Error fetching comments:", error);
+      return res.status(500).json({ success: false, message: "Cannot find comments" });
+    }
+  }
   // Admin can see all comments
   else if (req.user.role === "admin") {
     if (req.query.dentistId) {
@@ -62,24 +62,24 @@ exports.getCommentsByDentId = async (req, res, next) => {
           select: "name yearsOfExperience areaOfExpertise validate tel",
         });
     }
-    }
-    // General users can only see their own comments
-    else {
-      query = Booking.find({ user: req.user._id })
-        .populate({
-          path: "dentist",
-          select: "name yearsOfExperience areaOfExpertise validate tel",
-        });
-    }
-    try {
-      const comments = await query;
-      console.log("comments:", comments);
-      res.status(200).json({ success: true, count: comments.length, data: comments });
-    }
-    catch (error) {
-      console.error("Error fetching comments:", error);
-      return res.status(500).json({ success: false, message: "Cannot find comments" });
-    }
+  }
+  // General users can only see their own comments
+  else {
+    query = Booking.find({ user: req.user._id })
+      .populate({
+        path: "dentist",
+        select: "name yearsOfExperience areaOfExpertise validate tel",
+      });
+  }
+  try {
+    const comments = await query;
+    console.log("comments:", comments);
+    res.status(200).json({ success: true, count: comments.length, data: comments });
+  }
+  catch (error) {
+    console.error("Error fetching comments:", error);
+    return res.status(500).json({ success: false, message: "Cannot find comments" });
+  }
 }
 
 //@desc     Get one Comment

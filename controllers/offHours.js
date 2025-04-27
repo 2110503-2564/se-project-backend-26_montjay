@@ -10,10 +10,10 @@ const User = require("../models/User")
 exports.getOffHours = async (req, res) => {
   try {
     const query = OffHour.find()
-    .populate({
-      path: "owner",
-      select: "name tel email",
-    })
+      .populate({
+        path: "owner",
+        select: "name tel email",
+      })
 
     const OffHours = await query;
     res.status(200).json({ success: true, count: OffHours.length, data: OffHours });
@@ -39,8 +39,8 @@ exports.getOffHoursByOwnerId = async (req, res, next) => {
 
     // Query database
     const offHours = await OffHour.find({ owner: ownerId }).populate({
-        path: "owner",
-        select: "name tel email",
+      path: "owner",
+      select: "name tel email",
     });
 
     console.log("Fetched OffHours:", offHours);
@@ -73,8 +73,8 @@ exports.getOffHour = async (req, res, _next) => {
 
     // Query database
     const offHour = await OffHour.findOne({ _id: objectId }).populate({
-        path: "owner",
-        select: "name tel email",
+      path: "owner",
+      select: "name tel email",
     });
 
     console.log("Fetched OffHour:", offHour);
@@ -142,7 +142,7 @@ exports.addOffHour = async (req, res, next) => {
 
     const isDentist = await Dentist.findOne({ user: ownerId });
 
-    if( req.body.isForAllDentist === true) {
+    if (req.body.isForAllDentist === true) {
       const result = await Booking.updateMany(
         {
           apptDateAndTime: {
@@ -158,7 +158,7 @@ exports.addOffHour = async (req, res, next) => {
       );
       console.log(`Canceled booking: ${result.matchedCount}`);
     }
-    else if(isDentist){
+    else if (isDentist) {
       const result = await Booking.updateMany(
         {
           dentist: isDentist,
