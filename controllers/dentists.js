@@ -153,8 +153,9 @@ exports.getDentistDetail = async (req, res, next) => {
         select: "startDate endDate description",
       });
     const offHour = await OffHour.find({ isForAllDentist: true });
-    if (!detail)
-      {res.status(404).json({ success: false, message: "there is no dentist" });}
+    if (!detail) {
+      res.status(404).json({ success: false, message: "there is no dentist" });
+    }
     res.status(200).json({ success: true, data: detail, offHour });
   } catch (error) {
     console.log("error: ", error);
