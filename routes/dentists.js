@@ -291,9 +291,7 @@ router
   .get(getDentists)
   .post(protect, authorize("admin"), createDentist);
 
-router
-  .route("/detail/:dentID")
-  .get(getDentistDetail)
+router.route("/detail/:dentID").get(getDentistDetail);
 
 router
   .route("/:id")

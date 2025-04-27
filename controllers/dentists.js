@@ -1,6 +1,6 @@
 const Dentist = require("../models/Dentist.js");
 const Booking = require("../models/Booking.js");
-const OffHour = require("../models/OffHour.js")
+const OffHour = require("../models/OffHour.js");
 
 //@desc     Get all dentists
 //@route    GET /api/v1/dentists
@@ -22,11 +22,10 @@ exports.getDentists = async (req, res, next) => {
     (match) => `$${match}`,
   );
 
-  query = Dentist.find(JSON.parse(queryStr)).populate("bookings")
-    .populate({
-      path: "user",
-      select: "name",
-    });
+  query = Dentist.find(JSON.parse(queryStr)).populate("bookings").populate({
+    path: "user",
+    select: "name",
+  });
 
   if (req.query.select) {
     const fields = req.query.select.split(",").join(" ");
@@ -139,26 +138,26 @@ exports.getDentistDetail = async (req, res, next) => {
     const detail = await Dentist.findById(req.params.dentID)
       .populate({
         path: "user",
-        select: "name"
+        select: "name",
       })
       .populate({
         path: "bookings",
-        select: "apptDateAndTime user status"
+        select: "apptDateAndTime user status",
       })
       .populate({
         path: "comments",
-        select: "user comment"
+        select: "user comment",
       })
       .populate({
         path: "OffHours",
-        select: "startDate endDate description"
+        select: "startDate endDate description",
       });
     const offHour = await OffHour.find({ isForAllDentist: true });
-    if (!detail) res.status(404).json({ success: false, message: "there is no dentist" });
+    if (!detail)
+      {res.status(404).json({ success: false, message: "there is no dentist" });}
     res.status(200).json({ success: true, data: detail, offHour });
-
   } catch (error) {
-    console.log("error: ", error)
+    console.log("error: ", error);
     res.status(500).json({ success: false });
   }
-}
+};

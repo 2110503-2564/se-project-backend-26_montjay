@@ -6,7 +6,7 @@ const {
   updateBooking,
   deleteBooking,
   getAllDentistSchedules,
-  getBookingsForDentist
+  getBookingsForDentist,
 } = require("../controllers/bookings");
 
 /**
@@ -82,7 +82,7 @@ const {
  *         description: Not authorized
  *       500:
  *         description: Server error
- * 
+ *
  *   post:
  *     summary: Create a new booking
  *     description: Create a new dental appointment booking
@@ -183,7 +183,7 @@ const {
  *         description: Booking not found
  *       500:
  *         description: Server error
- * 
+ *
  *   put:
  *     summary: Update a booking
  *     description: Modify an existing booking (authorization required)
@@ -221,7 +221,7 @@ const {
  *         description: Booking not found
  *       500:
  *         description: Server error
- * 
+ *
  *   delete:
  *     summary: Delete a booking
  *     description: Remove a booking (authorization required)
@@ -250,19 +250,23 @@ const router = express.Router({ mergeParams: true });
 
 const { protect, authorize } = require("../middleware/auth");
 
-router.route("/")
+router
+  .route("/")
   .get(protect, (req, res, next) => {
     return getBookings(req, res, next);
   })
   .post(protect, authorize("admin", "user", "dentist"), addBooking);
 
-router.route("/schedules")
+router
+  .route("/schedules")
   .get(protect, authorize("admin"), getAllDentistSchedules);
 
-router.route("/dentist")
+router
+  .route("/dentist")
   .get(protect, authorize("admin", "dentist"), getBookingsForDentist);
 
-router.route("/:id")
+router
+  .route("/:id")
   .get(protect, getBooking)
   .put(protect, authorize("admin", "user", "dentist"), updateBooking)
   .delete(protect, authorize("admin", "user", "dentist"), deleteBooking);

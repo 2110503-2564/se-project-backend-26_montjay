@@ -6,18 +6,20 @@ const Dentist = require("../models/Dentist");
 //@route    GET /api/v1/comments
 //@access   Public
 exports.getComments = async (req, res) => {
-  const query = Comment.find()
-    .populate({
-      path: "dentist",
-      select: "name yearsOfExperience areaOfExpertise validate tel",
-    })
+  const query = Comment.find().populate({
+    path: "dentist",
+    select: "name yearsOfExperience areaOfExpertise validate tel",
+  });
   try {
     const comments = await query;
-    res.status(200).json({ success: true, count: comments.length, data: comments });
-  }
-  catch (error) {
+    res
+      .status(200)
+      .json({ success: true, count: comments.length, data: comments });
+  } catch (error) {
     console.error("Error fetching bookings:", error);
-    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find Booking" });
   }
 };
 
@@ -26,60 +28,59 @@ exports.getComments = async (req, res) => {
 //@access   Public
 exports.getCommentsByDentId = async (req, res, next) => {
   let query;
-   if (req.user.role === "dentist") {
+  if (req.user.role === "dentist") {
     try {
-      const dentistId = await Dentist.findOne({ user: req.user._id })
+      const dentistId = await Dentist.findOne({ user: req.user._id });
 
       if (!dentistId) {
         return res.status(400).json({ message: "Invalid dentist ID" });
       }
-      query = Comment.find({ dentist: dentistId._id })
-        .populate({
-          path: "user",
-          select: "name",
-        })
-    }
-    catch (error) {
+      query = Comment.find({ dentist: dentistId._id }).populate({
+        path: "user",
+        select: "name",
+      });
+    } catch (error) {
       console.error("Error fetching comments:", error);
-      return res.status(500).json({ success: false, message: "Cannot find comments" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Cannot find comments" });
     }
   }
   // Admin can see all comments
   else if (req.user.role === "admin") {
     if (req.query.dentistId) {
       console.log("Fetching comments for Dentist ID:", req.query.dentistId);
-      query = Comment.find({ dentist: req.query.dentistId })
-        .populate({
-          path: "user",
-          select: "name",
-        });
-    }
-    else {
-      query = Comment.find()
-        .populate({
-          path: "user",
-          select: "name",
-        });
+      query = Comment.find({ dentist: req.query.dentistId }).populate({
+        path: "user",
+        select: "name",
+      });
+    } else {
+      query = Comment.find().populate({
+        path: "user",
+        select: "name",
+      });
     }
   }
   // General users can only see their own comments
   else {
-    query = Booking.find({ user: req.user._id })
-      .populate({
-        path: "user",
-        select: "name",
-      });
+    query = Booking.find({ user: req.user._id }).populate({
+      path: "user",
+      select: "name",
+    });
   }
   try {
     const comments = await query;
     console.log("comments:", comments);
-    res.status(200).json({ success: true, count: comments.length, data: comments });
-  }
-  catch (error) {
+    res
+      .status(200)
+      .json({ success: true, count: comments.length, data: comments });
+  } catch (error) {
     console.error("Error fetching comments:", error);
-    return res.status(500).json({ success: false, message: "Cannot find comments" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find comments" });
   }
-}
+};
 
 //@desc     Get one Comment
 //@route    GET /api/v1/comments/:id
@@ -90,7 +91,9 @@ exports.getComment = async (req, res, _next) => {
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, message: "Invalid Comment ID format" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Comment ID format" });
     }
 
     // Convert string ID to ObjectId
@@ -105,13 +108,18 @@ exports.getComment = async (req, res, _next) => {
     console.log("Fetched Booking:", comment);
 
     if (!comment) {
-      return res.status(404).json({ success: false, message: `No comment found with ID ${req.params.id}` });
+      return res.status(404).json({
+        success: false,
+        message: `No comment found with ID ${req.params.id}`,
+      });
     }
 
     res.status(200).json({ success: true, data: comment });
   } catch (error) {
     console.error("Error fetching booking:", error);
-    return res.status(500).json({ success: false, message: "Cannot find comment" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find comment" });
   }
 };
 
@@ -120,7 +128,7 @@ exports.getComment = async (req, res, _next) => {
 //@access   Private
 exports.addComment = async (req, res, next) => {
   try {
-    // Get user ID from request body 
+    // Get user ID from request body
     const userId = req.body.user || req.user.id;
     const dentistId = req.body.dentist;
 
@@ -147,7 +155,7 @@ exports.addComment = async (req, res, next) => {
     // Check for existing bookings by the user
     const existComment = await Comment.findOne({
       user: userId,
-      dentist: dentistId
+      dentist: dentistId,
     });
 
     // Restrict non-admin users to one booking

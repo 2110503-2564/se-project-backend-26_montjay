@@ -5,7 +5,7 @@ const {
   updateOffHour,
   deleteOffHour,
   addOffHour,
-  getOffHoursByOwnerId
+  getOffHoursByOwnerId,
 } = require("../controllers/offHours");
 
 /**
@@ -80,7 +80,7 @@ const {
  *         description: Not authorized
  *       500:
  *         description: Server error
- *   
+ *
  *   post:
  *     summary: Add off-hour period
  *     description: Create a new off-hour period for a dentist or all dentists
@@ -233,9 +233,16 @@ const router = express.Router({ mergeParams: true });
 
 const { protect, authorize } = require("../middleware/auth");
 
-router.route("/").get(protect, getOffHours).post(protect, authorize("admin", "dentist"), addOffHour);
+router
+  .route("/")
+  .get(protect, getOffHours)
+  .post(protect, authorize("admin", "dentist"), addOffHour);
 
-router.route("/:id").get(protect, getOffHour).put(protect, authorize("admin", "dentist"), updateOffHour).delete(protect, authorize("admin", "dentist"), deleteOffHour);
+router
+  .route("/:id")
+  .get(protect, getOffHour)
+  .put(protect, authorize("admin", "dentist"), updateOffHour)
+  .delete(protect, authorize("admin", "dentist"), deleteOffHour);
 
 router.route("/owner/:ownerId").get(protect, getOffHoursByOwnerId);
 

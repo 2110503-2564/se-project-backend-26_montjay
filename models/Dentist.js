@@ -5,7 +5,7 @@ const DentistSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
     yearsOfExperience: {
       type: Number,
@@ -54,7 +54,7 @@ DentistSchema.virtual("OffHours", {
   ref: "OffHour",
   localField: "_id",
   foreignField: "owner",
-  justOne: false
-})
+  justOne: false,
+});
 
 module.exports = mongoose.model("Dentist", DentistSchema);

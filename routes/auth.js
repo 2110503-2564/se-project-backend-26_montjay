@@ -1,10 +1,11 @@
 const express = require("express");
 const {
-    register,
-    registerDentist,
-    login, logout,
-    getMe,
-    updateUser
+  register,
+  registerDentist,
+  login,
+  logout,
+  getMe,
+  updateUser,
 } = require("../controllers/auth");
 
 /**

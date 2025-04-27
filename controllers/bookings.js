@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Booking = require("../models/Booking");
 const Dentist = require("../models/Dentist");
-const offHours = require("../models/OffHour")
+const offHours = require("../models/OffHour");
 
 //@desc     Get all bookings
 //@route    GET /api/v1/bookings
@@ -18,7 +18,7 @@ exports.getBookings = async (req, res, next) => {
         populate: {
           path: "user",
           select: "name tel email",
-        }
+        },
       })
       .populate({
         path: "user",
@@ -36,7 +36,7 @@ exports.getBookings = async (req, res, next) => {
           populate: {
             path: "user",
             select: "name tel email",
-          }
+          },
         })
         .populate({
           path: "user",
@@ -50,7 +50,7 @@ exports.getBookings = async (req, res, next) => {
           populate: {
             path: "user",
             select: "name tel email",
-          }
+          },
         })
         .populate({
           path: "user",
@@ -61,11 +61,14 @@ exports.getBookings = async (req, res, next) => {
 
   try {
     const bookings = await query;
-    res.status(200).json({ success: true, count: bookings.length, data: bookings });
-  }
-  catch (error) {
+    res
+      .status(200)
+      .json({ success: true, count: bookings.length, data: bookings });
+  } catch (error) {
     console.error("Error fetching bookings:", error);
-    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find Booking" });
   }
 };
 
@@ -78,7 +81,7 @@ exports.getBookingsForDentist = async (req, res, next) => {
   // Dentist can see a schedule
   if (req.user.role === "dentist") {
     try {
-      const dentistId = await Dentist.findOne({ user: req.user._id })
+      const dentistId = await Dentist.findOne({ user: req.user._id });
 
       if (!dentistId) {
         return res.status(400).json({ message: "Invalid dentist ID" });
@@ -91,16 +94,17 @@ exports.getBookingsForDentist = async (req, res, next) => {
           populate: {
             path: "user",
             select: "name tel email",
-          }
+          },
         })
         .populate({
           path: "user",
           select: "name tel email",
         });
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error fetching bookings:", error);
-      return res.status(500).json({ success: false, message: "Cannot find Booking" });
+      return res
+        .status(500)
+        .json({ success: false, message: "Cannot find Booking" });
     }
   }
   // Admin can see all bookings
@@ -112,7 +116,7 @@ exports.getBookingsForDentist = async (req, res, next) => {
         populate: {
           path: "user",
           select: "name tel email",
-        }
+        },
       })
       .populate({
         path: "user",
@@ -128,7 +132,7 @@ exports.getBookingsForDentist = async (req, res, next) => {
         populate: {
           path: "user",
           select: "name tel email",
-        }
+        },
       })
       .populate({
         path: "user",
@@ -139,11 +143,14 @@ exports.getBookingsForDentist = async (req, res, next) => {
   try {
     const bookings = await query;
     console.log("bookings:", bookings);
-    res.status(200).json({ success: true, count: bookings.length, data: bookings });
-  }
-  catch (error) {
+    res
+      .status(200)
+      .json({ success: true, count: bookings.length, data: bookings });
+  } catch (error) {
     console.error("Error fetching bookings:", error);
-    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find Booking" });
   }
 };
 
@@ -162,8 +169,12 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
 
     const currentDate = new Date();
     // Filter by date range if provided
-    const startDate = req.query.startDate ? new Date(req.query.startDate) : currentDate;
-    const endDate = req.query.endDate ? new Date(req.query.endDate) : new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000); // Default to 30 days ahead
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate)
+      : currentDate;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate)
+      : new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000); // Default to 30 days ahead
 
     const dentists = await Dentist.find().populate({
       path: "user",
@@ -179,10 +190,12 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
         apptDate: { $gte: startDate, $lte: endDate },
         status: "Booked",
         isUnavailable: false,
-      }).populate({
-        path: "user",
-        select: "name tel email",
-      }).sort({ apptDate: 1 });
+      })
+        .populate({
+          path: "user",
+          select: "name tel email",
+        })
+        .sort({ apptDate: 1 });
 
       // Get all unavailable time slots ( holidays, off-hours )
       const unavailableSlots = await Booking.find({
@@ -198,7 +211,7 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
           yearsOfExperience: dentist.yearsOfExperience,
           areaOfExpertise: dentist.areaOfExpertise,
         },
-        upcomingBookings: upcomingBookings.map(booking => ({
+        upcomingBookings: upcomingBookings.map((booking) => ({
           id: booking._id,
           date: booking.apptDateAndTime,
           patientName: booking.user ? booking.user.name : "Unknown",
@@ -206,11 +219,11 @@ exports.getAllDentistSchedules = async (req, res, _next) => {
           patientEmail: booking.user ? booking.user.email : "",
           status: booking.status,
         })),
-        unavailableSlots: unavailableSlots.map(slot => ({
+        unavailableSlots: unavailableSlots.map((slot) => ({
           id: slot._id,
           date: slot.apptDateAndTime,
-          createdAt: slot.createdAt
-        }))
+          createdAt: slot.createdAt,
+        })),
       });
     }
 
@@ -238,7 +251,9 @@ exports.getBooking = async (req, res, _next) => {
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, message: "Invalid booking ID format" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid booking ID format" });
     }
 
     const booking = await Booking.findById(req.params.id).populate({
@@ -247,19 +262,24 @@ exports.getBooking = async (req, res, _next) => {
       populate: {
         path: "user",
         select: "name tel email",
-      }
+      },
     });
 
     console.log("Fetched Booking:", booking);
 
     if (!booking) {
-      return res.status(404).json({ success: false, message: `No booking found with ID ${req.params.id}` });
+      return res.status(404).json({
+        success: false,
+        message: `No booking found with ID ${req.params.id}`,
+      });
     }
 
     res.status(200).json({ success: true, data: booking });
   } catch (error) {
     console.error("Error fetching booking:", error);
-    return res.status(500).json({ success: false, message: "Cannot find Booking" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find Booking" });
   }
 };
 
@@ -317,14 +337,14 @@ exports.addBooking = async (req, res, _next) => {
     if (existingOffHours.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "This time slot is not available"
+        message: "This time slot is not available",
       });
     }
 
     if (existingBooking) {
       return res.status(400).json({
         success: false,
-        message: "Some people have booked this time."
+        message: "Some people have booked this time.",
       });
     }
 
@@ -354,7 +374,9 @@ exports.updateBooking = async (req, res, _next) => {
     // Check authorization - user must be booking owner, admin, or dentist for respective bookings
     const isOwner = booking.user.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
-    const isDentist = req.user.role === "dentist" && booking.dentist.toString() === req.body.dentist;
+    const isDentist =
+      req.user.role === "dentist" &&
+      booking.dentist.toString() === req.body.dentist;
 
     if (!isOwner && !isAdmin && !isDentist) {
       return res.status(403).json({
@@ -364,7 +386,7 @@ exports.updateBooking = async (req, res, _next) => {
     }
 
     // Handle special case for toggling unavailability status
-    if (req.body.hasOwnProperty("isUnavailable")) {
+    if (Object.prototype.hasOwnProperty.call(req.body, "isUnavailable")) {
       // Check if user is admin or dentist
       if (req.user.role !== "admin" && req.user.role !== "dentist") {
         return res.status(403).json({
@@ -380,14 +402,18 @@ exports.updateBooking = async (req, res, _next) => {
           dentist: booking.dentist,
           apptDateAndTime: booking.apptDateAndTime,
           _id: { $ne: booking._id },
-          isUnavailable: false
+          isUnavailable: false,
         });
 
         if (conflictingBookings.length > 0) {
-          await Promise.all(conflictingBookings.map(async (b) => {
-            await Booking.findByIdAndUpdate(b._id, { status: "Cancel" });
-          }));
-          console.log(`Cancelled ${conflictingBookings.length} conflicting bookings`);
+          await Promise.all(
+            conflictingBookings.map(async (b) => {
+              await Booking.findByIdAndUpdate(b._id, { status: "Cancel" });
+            }),
+          );
+          console.log(
+            `Cancelled ${conflictingBookings.length} conflicting bookings`,
+          );
         }
       }
     }
@@ -398,7 +424,7 @@ exports.updateBooking = async (req, res, _next) => {
     });
 
     if (booking.isUnavailable) {
-      if (req.user.role == "user") {
+      if (req.user.role === "user") {
         return res
           .status(500)
           .json({ success: false, message: "You don't have permission" });
@@ -406,14 +432,16 @@ exports.updateBooking = async (req, res, _next) => {
 
       booking.status = "Cancel";
 
-      const result = await Booking.findOneAndUpdate({
-        dentist: booking.dentist,
-        apptDateAndTime: booking.apptDateAndTime,
-        isUnavailable: false
-      },
+      const result = await Booking.findOneAndUpdate(
         {
-          status: "Cancel"
-        });
+          dentist: booking.dentist,
+          apptDateAndTime: booking.apptDateAndTime,
+          isUnavailable: false,
+        },
+        {
+          status: "Cancel",
+        },
+      );
       if (result) {
         console.log("Cancel booking");
       } else {
@@ -446,7 +474,9 @@ exports.deleteBooking = async (req, res, _next) => {
 
     const isOwner = booking.user.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
-    const isDentist = req.user.role === "dentist" && booking.dentist.toString() === req.body.dentist;
+    const isDentist =
+      req.user.role === "dentist" &&
+      booking.dentist.toString() === req.body.dentist;
 
     if (!isOwner && !isAdmin && !isDentist) {
       return res.status(403).json({

@@ -1,13 +1,16 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const BlackList = require("../models/Blacklist");  // Make sure this matches your model file name
+const BlackList = require("../models/Blacklist"); // Make sure this matches your model file name
 
 // Protect routes
 exports.protect = async (req, res, next) => {
   let token;
 
   // Check for token in Authorization header
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
     token = req.headers.authorization.split(" ")[1];
   }
   // Check for token in cookies
@@ -26,9 +29,10 @@ exports.protect = async (req, res, next) => {
     // Check if token is blacklisted
     const isBlacklisted = await BlackList.findOne({ token });
     if (isBlacklisted) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Token has been invalidated. Please login again." });
+      return res.status(401).json({
+        success: false,
+        message: "Token has been invalidated. Please login again.",
+      });
     }
 
     // Verify the token

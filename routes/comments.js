@@ -5,7 +5,7 @@ const {
   updateComment,
   deleteComment,
   addComment,
-  getCommentsByDentId
+  getCommentsByDentId,
 } = require("../controllers/comments");
 
 /**
@@ -71,7 +71,7 @@ const {
  *         description: Not authorized
  *       500:
  *         description: Server error
- *   
+ *
  *   post:
  *     summary: Add a comment
  *     description: Create a new comment for a dentist
@@ -262,12 +262,13 @@ const router = express.Router({ mergeParams: true });
 
 const { protect, authorize } = require("../middleware/auth");
 
-router.route("/")
+router
+  .route("/")
   .get(protect, getComments)
   .post(protect, authorize("admin", "user"), addComment);
-router.route("/dentist")
-  .get(protect, getCommentsByDentId);
-router.route("/:id")
+router.route("/dentist").get(protect, getCommentsByDentId);
+router
+  .route("/:id")
   .get(protect, getComment)
   .put(protect, authorize("admin", "user"), updateComment)
   .delete(protect, authorize("admin", "user"), deleteComment);

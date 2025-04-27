@@ -7,8 +7,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const { xss } = require("express-xss-sanitizer");
 const rateLimit = require("express-rate-limit");
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
 // Route files
 const auth = require("./routes/auth");
@@ -40,7 +40,7 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-  })
+  }),
 );
 //Rate Limiting
 const limiter = rateLimit({
@@ -58,27 +58,29 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API for a dental appointment booking system",
       contact: {
-        name: "Developer"
+        name: "Developer",
       },
       servers: [
         {
-          url: process.env.HOST ? `${process.env.HOST}:${process.env.PORT || 5003}` : "http://localhost:5003"
-        }
-      ]
+          url: process.env.HOST
+            ? `${process.env.HOST}:${process.env.PORT || 5003}`
+            : "http://localhost:5003",
+        },
+      ],
     },
     components: {
       securitySchemes: {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "JWT"
-        }
-      }
-    }
+          bearerFormat: "JWT",
+        },
+      },
+    },
   },
   apis: [
-    "./routes/*.js" // Path to the API docs
-  ]
+    "./routes/*.js", // Path to the API docs
+  ],
 };
 
 // Initialize swagger
@@ -104,7 +106,7 @@ const server = app.listen(
     "Server running in ",
     process.env.NODE_ENV,
     `on ${process.env.HOST || "http://localhost"}:${PORT}`,
-    "\nAPI Documentation available at /api-docs"
+    "\nAPI Documentation available at /api-docs",
   ),
 );
 

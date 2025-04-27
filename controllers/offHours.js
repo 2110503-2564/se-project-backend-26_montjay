@@ -2,25 +2,27 @@ const mongoose = require("mongoose");
 const OffHour = require("../models/OffHour");
 const Booking = require("../models/Booking");
 const Dentist = require("../models/Dentist");
-const User = require("../models/User")
+const User = require("../models/User");
 
 //@desc     Get all OffHours
 //@route    GET /api/v1/offHours
 //@access   Public
 exports.getOffHours = async (req, res) => {
   try {
-    const query = OffHour.find()
-      .populate({
-        path: "owner",
-        select: "name tel email",
-      })
+    const query = OffHour.find().populate({
+      path: "owner",
+      select: "name tel email",
+    });
 
     const OffHours = await query;
-    res.status(200).json({ success: true, count: OffHours.length, data: OffHours });
-  }
-  catch (error) {
+    res
+      .status(200)
+      .json({ success: true, count: OffHours.length, data: OffHours });
+  } catch (error) {
     console.error("Error fetching OffHours:", error);
-    return res.status(500).json({ success: false, message: "Cannot find OffHours" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find OffHours" });
   }
 };
 
@@ -34,7 +36,9 @@ exports.getOffHoursByOwnerId = async (req, res, next) => {
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(req.params.ownerId)) {
-      return res.status(400).json({ success: false, message: "Invalid Owner ID format" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid Owner ID format" });
     }
 
     // Query database
@@ -46,15 +50,22 @@ exports.getOffHoursByOwnerId = async (req, res, next) => {
     console.log("Fetched OffHours:", offHours);
 
     if (!offHours) {
-      return res.status(404).json({ success: false, message: `No comment found with ID ${req.params.ownerId}` });
+      return res.status(404).json({
+        success: false,
+        message: `No comment found with ID ${req.params.ownerId}`,
+      });
     }
 
-    res.status(200).json({ success: true, count: offHours.length, data: offHours });
+    res
+      .status(200)
+      .json({ success: true, count: offHours.length, data: offHours });
   } catch (error) {
     console.error("Error fetching offHours:", error);
-    return res.status(500).json({ success: false, message: "Cannot find offHours" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find offHours" });
   }
-}
+};
 
 //@desc     Get one OffHour
 //@route    GET /api/v1/offHours/:id
@@ -65,7 +76,9 @@ exports.getOffHour = async (req, res, _next) => {
 
     // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, message: "Invalid OffHour ID format" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid OffHour ID format" });
     }
 
     // Convert string ID to ObjectId
@@ -80,13 +93,18 @@ exports.getOffHour = async (req, res, _next) => {
     console.log("Fetched OffHour:", offHour);
 
     if (!offHour) {
-      return res.status(404).json({ success: false, message: `No offHour found with ID ${req.params.id}` });
+      return res.status(404).json({
+        success: false,
+        message: `No offHour found with ID ${req.params.id}`,
+      });
     }
 
     res.status(200).json({ success: true, data: offHour });
   } catch (error) {
     console.error("Error fetching offHour:", error);
-    return res.status(500).json({ success: false, message: "Cannot find offHour" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Cannot find offHour" });
   }
 };
 
@@ -95,7 +113,7 @@ exports.getOffHour = async (req, res, _next) => {
 //@access   Private
 exports.addOffHour = async (req, res, next) => {
   try {
-    // Get owner ID from request body 
+    // Get owner ID from request body
     const ownerId = req.body.owner || req.user.id;
     const startDate = new Date(req.body.startDate);
     const endDate = new Date(req.body.endDate);
@@ -154,11 +172,10 @@ exports.addOffHour = async (req, res, next) => {
         },
         {
           $set: { status: "cancel", isUnavailable: true },
-        }
+        },
       );
       console.log(`Canceled booking: ${result.matchedCount}`);
-    }
-    else if (isDentist) {
+    } else if (isDentist) {
       const result = await Booking.updateMany(
         {
           dentist: isDentist,
@@ -171,7 +188,7 @@ exports.addOffHour = async (req, res, next) => {
         },
         {
           $set: { status: "cancel", isUnavailable: true },
-        }
+        },
       );
       console.log(`Canceled booking: ${result.matchedCount}`);
     }
