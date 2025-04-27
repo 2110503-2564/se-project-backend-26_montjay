@@ -6,10 +6,11 @@ const Dentist = require("../models/Dentist");
 //@route    GET /api/v1/comments
 //@access   Public
 exports.getComments = async (req, res) => {
-  const query = Comment.find().populate({
-    path: "dentist",
-    select: "name yearsOfExperience areaOfExpertise validate tel",
-  });
+  const query = Comment.find()
+    .populate({
+      path: "user",
+      select: "name",
+    });
   try {
     const comments = await query;
     res
@@ -24,61 +25,38 @@ exports.getComments = async (req, res) => {
 };
 
 //@desc     Get all Comments by dentistId
-//@route    GET /api/v1/comments/dentist
+//@route    GET /api/v1/comments/dentist/?dentistId
 //@access   Public
 exports.getCommentsByDentId = async (req, res, next) => {
   let query;
-  if (req.user.role === "dentist") {
-    try {
-      const dentistId = await Dentist.findOne({ user: req.user._id });
 
-      if (!dentistId) {
-        return res.status(400).json({ message: "Invalid dentist ID" });
-      }
-      query = Comment.find({ dentist: dentistId._id }).populate({
-        path: "user",
-        select: "name",
-      });
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Cannot find comments" });
+  if (req.query.dentistId) {
+    if (!mongoose.Types.ObjectId.isValid(req.query.dentistId)) {
+      return res.status(400).json({ success: false, message: "Invalid dentistId format" });
     }
-  }
-  // Admin can see all comments
-  else if (req.user.role === "admin") {
-    if (req.query.dentistId) {
-      console.log("Fetching comments for Dentist ID:", req.query.dentistId);
-      query = Comment.find({ dentist: req.query.dentistId }).populate({
+
+    console.log("Fetching comments for Dentist ID:", req.query.dentistId);
+    query = Comment.find({ dentist: req.query.dentistId })
+      .populate({
         path: "user",
-        select: "name",
-      });
-    } else {
-      query = Comment.find().populate({
-        path: "user",
-        select: "name",
-      });
+        select:"name"
+      })
     }
-  }
-  // General users can only see their own comments
   else {
-    query = Booking.find({ user: req.user._id }).populate({
-      path: "user",
-      select: "name",
-    });
+    query = Comment.find()
+      .populate({
+        path: "dentist",
+        select: "name yearsOfExperience areaOfExpertise validate tel",
+      });
   }
+
   try {
     const comments = await query;
     console.log("comments:", comments);
-    res
-      .status(200)
-      .json({ success: true, count: comments.length, data: comments });
+    res.status(200).json({ success: true, count: comments.length, data: comments });
   } catch (error) {
     console.error("Error fetching comments:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Cannot find comments" });
+    return res.status(500).json({ success: false, message: "Cannot find comments" });
   }
 };
 
@@ -100,10 +78,11 @@ exports.getComment = async (req, res, _next) => {
     const objectId = new mongoose.Types.ObjectId(req.params.id);
 
     // Query database
-    const comment = await Comment.findOne({ id: objectId }).populate({
-      path: "dentist",
-      select: "name yearsOfExperience areaOfExpertise validate tel",
-    });
+    const comment = await Comment.findOne({ id: objectId })
+      .populate({
+        path: "user",
+        select: "name",
+      });
 
     console.log("Fetched Booking:", comment);
 
