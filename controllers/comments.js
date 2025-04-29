@@ -74,15 +74,10 @@ exports.getComment = async (req, res, _next) => {
         .json({ success: false, message: "Invalid Comment ID format" });
     }
 
-    // Convert string ID to ObjectId
-    const objectId = new mongoose.Types.ObjectId(req.params.id);
-
-    // Query database
-    const comment = await Comment.findOne({ id: objectId })
-      .populate({
-        path: "user",
-        select: "name",
-      });
+    const comment = await Comment.findById(req.params.id).populate({
+      path: "user",
+      select: "name",
+    });
 
     console.log("Fetched Booking:", comment);
 
